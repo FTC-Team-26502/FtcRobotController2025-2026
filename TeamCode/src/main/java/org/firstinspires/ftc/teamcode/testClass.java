@@ -17,23 +17,23 @@ public class testClass extends baseCode {
 
         while (opModeIsActive()) {
             // Check if the left trigger is pressed for shooting
-            if (gamepad1.left_trigger > 0.5 && !leftTriggerPressed) { // Threshold for trigger press
-                leftTriggerPressed = true;
+            telemetry.addData("left Trigger: ", gamepad1.b);
+            if (gamepad1.b) {
+                telemetry.addData("shooting", 1);
                 shoot(45, 1); // Ensure this is implemented in baseCode
-            } else if (gamepad1.left_trigger <= 0.5) { // Reset when the trigger is released
-                leftTriggerPressed = false;
             }
 
             // Toggle intake on and off when the right trigger is pressed
-            if (gamepad1.right_trigger > 0.5 && !rightTriggerPressed) { // Threshold for trigger press
-                rightTriggerPressed = true; // Prevent multiple triggers
+            telemetry.addData("Right trigger: ", gamepad1.right_trigger);
+            if (gamepad1.a && !rightTriggerPressed) { // Threshold for trigger press
+                rightTriggerPressed = true; // gaPrevent multiple triggers
                 intakeRunning = !intakeRunning; // Toggle the intake state
                 if (intakeRunning) {
                     intakeRun(1); // Start the intake
                 } else {
                     intakeRun(0); // Stop the intake
                 }
-            } else if (gamepad1.right_trigger <= 0.5) { // Reset when the trigger is released
+            } else if (gamepad1.a) { // Reset when the trigger is released
                 rightTriggerPressed = false;
             }
 
