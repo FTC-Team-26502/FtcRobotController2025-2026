@@ -18,7 +18,6 @@ public class Test extends LinearOpMode {
     public void runOpMode() {
         leftMotor  = hardwareMap.get(DcMotor.class, "leftMotor");
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
-`
         
         // Set one motor reversed so they spin opposite directions
         leftMotor.setDirection(DcMotor.Direction.FORWARD);

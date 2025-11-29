@@ -3,14 +3,16 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public abstract class baseCodeV2 extends LinearOpMode {
-    protected DcMotor leftFront;
-    protected DcMotor leftBack;
-    protected DcMotor rightFront;
-    protected DcMotor rightBack;
+    protected DcMotorEx leftFront;
+    protected DcMotorEx leftBack;
+    protected DcMotorEx rightFront;
+    protected DcMotorEx rightBack;
     protected DcMotor anglerLeft;
     protected DcMotor anglerRight;
     protected DcMotor shooterLeft;
@@ -33,25 +35,25 @@ public abstract class baseCodeV2 extends LinearOpMode {
 
     public void initOpMode() {
         // Init Motors
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-
-        anglerLeft = hardwareMap.get(DcMotor.class, "anglerLeft");
-        anglerRight = hardwareMap.get(DcMotor.class, "anglerRight");
-        shooterLeft = hardwareMap.get(DcMotor.class, "shooterLeft");
-        shooterRight = hardwareMap.get(DcMotor.class, "shooterRight");
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+//
+//        anglerLeft = hardwareMap.get(DcMotor.class, "anglerLeft");
+//        anglerRight = hardwareMap.get(DcMotor.class, "anglerRight");
+//        shooterLeft = hardwareMap.get(DcMotor.class, "shooterLeft");
+//        shooterRight = hardwareMap.get(DcMotor.class, "shooterRight");
 
         // Init Servos
-        inFrontLeft = hardwareMap.get(CRServo.class, "inFrontLeft");
-        inFrontRight = hardwareMap.get(CRServo.class, "inFrontRight");
-        inMiddleLeft = hardwareMap.get(CRServo.class, "inMiddleLeft");   // fixed name
-        inMiddleRight = hardwareMap.get(CRServo.class, "inMiddleRight");  // fixed name
-        inBackLeft = hardwareMap.get(CRServo.class, "inBackLeft");
-        inBackRight = hardwareMap.get(CRServo.class, "inBackRight");
-        bumperLeft = hardwareMap.get(Servo.class, "bumperLeft");
-        bumperRight = hardwareMap.get(Servo.class, "bumperRight");
+//        inFrontLeft = hardwareMap.get(CRServo.class, "inFrontLeft");
+//        inFrontRight = hardwareMap.get(CRServo.class, "inFrontRight");
+//        inMiddleLeft = hardwareMap.get(CRServo.class, "inMiddleLeft");   // fixed name
+//        inMiddleRight = hardwareMap.get(CRServo.class, "inMiddleRight");  // fixed name
+//        inBackLeft = hardwareMap.get(CRServo.class, "inBackLeft");
+//        inBackRight = hardwareMap.get(CRServo.class, "inBackRight");
+//        bumperLeft = hardwareMap.get(Servo.class, "bumperLeft");
+//        bumperRight = hardwareMap.get(Servo.class, "bumperRight");
 
         // Drive directions/behaviors (adjust if your wiring is different)
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -63,60 +65,63 @@ public abstract class baseCodeV2 extends LinearOpMode {
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // CRServo directions (use CRServo.Direction)
-        inFrontRight.setDirection(CRServo.Direction.REVERSE);
-        inMiddleRight.setDirection(CRServo.Direction.REVERSE);
-        inBackRight.setDirection(CRServo.Direction.REVERSE);
+//        inFrontRight.setDirection(CRServo.Direction.REVERSE);
+//        inMiddleRight.setDirection(CRServo.Direction.REVERSE);
+//        inBackRight.setDirection(CRServo.Direction.REVERSE);
+//
+//        // Prepare angler to run to position later
+//        anglerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        anglerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        anglerLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        anglerRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
+//        anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        // Prepare angler to run to position later
-        anglerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        anglerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        anglerLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        anglerRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.addLine("Init complete");
         telemetry.update();
     }
 
     // Run all the servos on the intake at input Power
-    public void intakeRun(double power) {
-        inFrontLeft.setPower(power);
-        inFrontRight.setPower(power);
-        inBackLeft.setPower(power);
-        inBackRight.setPower(power);
-        inMiddleLeft.setPower(power);
-        inMiddleRight.setPower(power);
-        telemetry.addData("Intake running at:", power);
-    }
-
-    public void shoot(int angle, double speed) {
-        // Spin both shooters
-        shooterLeft.setPower(speed);
-        shooterRight.setPower(speed); // fixed
-
-        int ticks = (int) Math.round(ANGLE_TO_TICKS * angle);
-        // Move angler (requires RUN_TO_POSITION and power)
-        anglerLeft.setTargetPosition(ticks);
-        anglerRight.setTargetPosition(ticks);
-        anglerLeft.setPower(ANGLER_SPEED);
-        anglerRight.setPower(ANGLER_SPEED);
-
-        // Brief non-tight wait to spin up (avoid freezing loop)
-        long end = System.currentTimeMillis() + OUTTAKE_TIMEOUT;
-        while (opModeIsActive() && System.currentTimeMillis() < end) {
-            telemetry.addLine("Speeding up Outtake");
-            telemetry.update();
-            idle();
-        }
-
-        // Bumper fire and reset with a short delay
-        bumperLeft.setPosition(BUMPING_POSITION);
-        bumperRight.setPosition(BUMPING_POSITION);
-        safeSleep(120);
-        bumperLeft.setPosition(RESTING_POSITION);
-        bumperRight.setPosition(RESTING_POSITION);
-    }
+//    public void intakeRun(double power) {
+//        inFrontLeft.setPower(power);
+//        inFrontRight.setPower(power);
+//        inBackLeft.setPower(power);
+//        inBackRight.setPower(power);
+//        inMiddleLeft.setPower(power);
+//        inMiddleRight.setPower(power);
+//        telemetry.addData("Intake running at:", power);
+//    }
+//
+//    public void shoot(int angle, double speed) {
+//        // Spin both shooters
+//        shooterLeft.setPower(speed);
+//        shooterRight.setPower(speed); // fixed
+//
+//        int ticks = (int) Math.round(ANGLE_TO_TICKS * angle);
+//        // Move angler (requires RUN_TO_POSITION and power)
+//        anglerLeft.setTargetPosition(ticks);
+//        anglerRight.setTargetPosition(ticks);
+//        anglerLeft.setPower(ANGLER_SPEED);
+//        anglerRight.setPower(ANGLER_SPEED);
+//
+//        // Brief non-tight wait to spin up (avoid freezing loop)
+//        long end = System.currentTimeMillis() + OUTTAKE_TIMEOUT;
+//        while (opModeIsActive() && System.currentTimeMillis() < end) {
+//            telemetry.addLine("Speeding up Outtake");
+//            telemetry.update();
+//            idle();
+//        }
+//
+//        // Bumper fire and reset with a short delay
+//        bumperLeft.setPosition(BUMPING_POSITION);
+//        bumperRight.setPosition(BUMPING_POSITION);
+//        safeSleep(120);
+//        bumperLeft.setPosition(RESTING_POSITION);
+//        bumperRight.setPosition(RESTING_POSITION);
+//    }
 
     public void driveSpeed(double xPower, double yPower, double turnPower) {
         // Scale down
