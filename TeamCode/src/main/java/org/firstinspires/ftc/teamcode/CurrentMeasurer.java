@@ -12,24 +12,21 @@ import com.qualcomm.robotcore.util.RobotLog;
 @TeleOp(name = "Motor Measurer", group = "Test")
 public abstract class CurrentMeasurer extends LinearOpMode {
     double power = 0.2;
-    private DcMotor leftFront;
-    private DcMotor leftBack;
-    private DcMotor rightFront;
-    private DcMotor rightBack;
+    private DcMotorEx leftFront;
+    private DcMotorEx leftBack;
+    private DcMotorEx rightFront;
+    private DcMotorEx rightBack;
+
     @Override
     public void runOpMode(){
-        waitForStart();
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
-//
+        waitForStart();
 
         while(opModeIsActive()) {
-            leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-            leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-            rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-            rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+
 
             if (gamepad1.a) {
 
