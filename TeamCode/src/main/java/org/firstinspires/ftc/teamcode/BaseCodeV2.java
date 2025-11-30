@@ -1,13 +1,22 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import java.util.Locale;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 public abstract class BaseCodeV2 extends LinearOpMode {
+
+    protected GoBildaPinpointDriver odo;
     protected DcMotorEx leftFront;
     protected DcMotorEx leftBack;
     protected DcMotorEx rightFront;
@@ -34,6 +43,11 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        odo.setOffsets(-82.0, -10.0, DistanceUnit.MM);
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+
 //
 //        anglerLeft = hardwareMap.get(DcMotorEx.class, "anglerLeft");
 //        anglerRight = hardwareMap.get(DcMotorEx.class, "anglerRight");
@@ -58,6 +72,8 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+
 
         // CRServo directions (use CRServo.Direction)
 //        inFrontRight.setDirection(CRServo.Direction.REVERSE);
