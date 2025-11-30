@@ -2,10 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-public abstract class baseCode extends LinearOpMode {
+public abstract class BaseCode extends LinearOpMode {
     protected DcMotor leftFront;
     protected DcMotor leftBack;
     protected DcMotor rightFront;

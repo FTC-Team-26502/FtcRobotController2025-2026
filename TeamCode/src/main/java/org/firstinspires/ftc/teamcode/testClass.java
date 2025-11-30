@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Test OpMode with Triggers", group = "Test")
-public class testClass extends baseCode {
+public class testClass extends BaseCode {
     private boolean intakeRunning = false; // Tracks if the intake is running
     private boolean rightTriggerPressed = false; // Tracks the right trigger state
 

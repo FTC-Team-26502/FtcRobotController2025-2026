@@ -2,31 +2,26 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-public abstract class baseCodeV2 extends LinearOpMode {
+public abstract class BaseCodeV2 extends LinearOpMode {
     protected DcMotorEx leftFront;
     protected DcMotorEx leftBack;
     protected DcMotorEx rightFront;
     protected DcMotorEx rightBack;
-    protected DcMotor anglerLeft;
-    protected DcMotor anglerRight;
-    protected DcMotor shooterLeft;
-    protected DcMotor shooterRight;
+    protected DcMotorEx anglerLeft;
+    protected DcMotorEx anglerRight;
+    protected DcMotorEx shooterLeft;
+    protected DcMotorEx shooterRight;
     protected CRServo inFrontLeft;
     protected CRServo inFrontRight;
     protected CRServo inMiddleLeft;
     protected CRServo inMiddleRight;
     protected CRServo inBackLeft;
     protected CRServo inBackRight;
-    protected Servo bumperLeft;
-    protected Servo bumperRight;
-    protected final double BUMPING_POSITION = 1;
-    protected final double RESTING_POSITION = 0;
     protected final double MIN_SPEED_DRIVE = 0.2;
     protected final double ANGLER_SPEED = 0.5;
     protected final double DRIVE_SPEED_SCALE_DOWN = 0.5;
@@ -40,10 +35,10 @@ public abstract class baseCodeV2 extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
 //
-//        anglerLeft = hardwareMap.get(DcMotor.class, "anglerLeft");
-//        anglerRight = hardwareMap.get(DcMotor.class, "anglerRight");
-//        shooterLeft = hardwareMap.get(DcMotor.class, "shooterLeft");
-//        shooterRight = hardwareMap.get(DcMotor.class, "shooterRight");
+//        anglerLeft = hardwareMap.get(DcMotorEx.class, "anglerLeft");
+//        anglerRight = hardwareMap.get(DcMotorEx.class, "anglerRight");
+//        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
+//        shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
 
         // Init Servos
 //        inFrontLeft = hardwareMap.get(CRServo.class, "inFrontLeft");
@@ -56,13 +51,13 @@ public abstract class baseCodeV2 extends LinearOpMode {
 //        bumperRight = hardwareMap.get(Servo.class, "bumperRight");
 
         // Drive directions/behaviors (adjust if your wiring is different)
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
+        rightBack.setDirection(DcMotorEx.Direction.REVERSE);
 
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // CRServo directions (use CRServo.Direction)
 //        inFrontRight.setDirection(CRServo.Direction.REVERSE);
@@ -70,15 +65,15 @@ public abstract class baseCodeV2 extends LinearOpMode {
 //        inBackRight.setDirection(CRServo.Direction.REVERSE);
 //
 //        // Prepare angler to run to position later
-//        anglerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        anglerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        anglerLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        anglerRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
-//        anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+//        anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+//        anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+//        anglerRight.setDirection(DcMotorExSimple.Direction.REVERSE);
+//        anglerLeft.setDirection(DcMotorExSimple.Direction.FORWARD);
 
-        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorEx.Direction.FORWARD);
+        leftBack.setDirection(DcMotorEx.Direction.REVERSE);
 
         telemetry.addLine("Init complete");
         telemetry.update();
