@@ -22,12 +22,13 @@ public class testdrive extends BaseCodeV2{
 
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode();
+        initOpMode(true, true, false, false , true);
         waitForStart();
 
         while (opModeIsActive()) {
             Pose2D pos = odo.getPosition();
             String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("Color", color.green());
             telemetry.addData("Position", data);
             telemetry.update();
 //            leftFront.setPower(0.2);

@@ -5,14 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import java.util.Locale;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 public abstract class BaseCodeV2 extends LinearOpMode {
 
@@ -31,108 +29,136 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     protected CRServo inMiddleRight;
     protected CRServo inBackLeft;
     protected CRServo inBackRight;
+    protected Servo light;
+    protected ColorSensor color;
+    protected DistanceSensor flDistance;
+    protected DistanceSensor blDistance;
+    protected DistanceSensor frDistance;
+    protected DistanceSensor brDistance;
+    protected final double LIGHTRED = 0.3;
+    protected final double LIGHTYELLOW = 0.388;
+    protected final double LIGHTGREEN = 0.477;
+    protected final double LIGHTBLUE = 0.611;
+    protected final double LIGHTPURPLE = 0.722;
     protected final double MIN_SPEED_DRIVE = 0.2;
-    protected final double ANGLER_SPEED = 0.5;
+    protected final double ANGLER_SPEED = 0.1;
     protected final double DRIVE_SPEED_SCALE_DOWN = 0.5;
     protected final double ANGLE_TO_TICKS = 537.7/360;
     protected final long OUTTAKE_TIMEOUT = 300;
 
-    public void initOpMode() {
+    public void initOpMode(boolean drive, boolean odometry, boolean shooter, boolean intake, boolean sensors) {
         // Init Motors
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
-        odo.setOffsets(-82.0, -10.0, DistanceUnit.MM);
-        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        if(drive) {
+            leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+            leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
+            rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+            rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
 
-//
-//        anglerLeft = hardwareMap.get(DcMotorEx.class, "anglerLeft");
-//        anglerRight = hardwareMap.get(DcMotorEx.class, "anglerRight");
-//        shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
-//        shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
+            rightFront.setDirection(DcMotorEx.Direction.FORWARD);
+            rightBack.setDirection(DcMotorEx.Direction.FORWARD);
+            leftFront.setDirection(DcMotorEx.Direction.FORWARD);
+            leftBack.setDirection(DcMotorEx.Direction.FORWARD);
 
+
+            leftFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+            rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        }
+        //Init odometry
+        if(odometry) {
+            odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+            odo.setOffsets(-82.0, -10.0, DistanceUnit.MM);
+            odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        }
+        //Init shooter
+        if(shooter) {
+            anglerLeft = hardwareMap.get(DcMotorEx.class, "anglerLeft");
+            anglerRight = hardwareMap.get(DcMotorEx.class, "anglerRight");
+            shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
+            shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
+            anglerLeft.setTargetPosition(0);
+            anglerRight.setTargetPosition(0);
+            anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+            anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+            anglerRight.setDirection(DcMotorEx.Direction.REVERSE);
+            anglerLeft.setDirection(DcMotorEx.Direction.FORWARD);
+        }
         // Init Servos
-//        inFrontLeft = hardwareMap.get(CRServo.class, "inFrontLeft");
-//        inFrontRight = hardwareMap.get(CRServo.class, "inFrontRight");
-//        inMiddleLeft = hardwareMap.get(CRServo.class, "inMiddleLeft");   // fixed name
-//        inMiddleRight = hardwareMap.get(CRServo.class, "inMiddleRight");  // fixed name
-//        inBackLeft = hardwareMap.get(CRServo.class, "inBackLeft");
-//        inBackRight = hardwareMap.get(CRServo.class, "inBackRight");
-//        bumperLeft = hardwareMap.get(Servo.class, "bumperLeft");
-//        bumperRight = hardwareMap.get(Servo.class, "bumperRight");
+        if(intake) {
+            inFrontLeft = hardwareMap.get(CRServo.class, "inFrontLeft");
+            inFrontRight = hardwareMap.get(CRServo.class, "inFrontRight");
+            inMiddleLeft = hardwareMap.get(CRServo.class, "inMiddleLeft");
+            inMiddleRight = hardwareMap.get(CRServo.class, "inMiddleRight");
+            inBackLeft = hardwareMap.get(CRServo.class, "inBackLeft");
+            inBackRight = hardwareMap.get(CRServo.class, "inBackRight");
 
-        // Drive directions/behaviors (adjust if your wiring is different)
-        rightFront.setDirection(DcMotorEx.Direction.REVERSE);
-        rightBack.setDirection(DcMotorEx.Direction.REVERSE);
+            inFrontLeft.setDirection(CRServo.Direction.REVERSE);
+            inMiddleLeft.setDirection(CRServo.Direction.REVERSE);
+            inBackLeft.setDirection(CRServo.Direction.REVERSE);
+        }
 
-        leftFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-
-
-
-        // CRServo directions (use CRServo.Direction)
-//        inFrontRight.setDirection(CRServo.Direction.REVERSE);
-//        inMiddleRight.setDirection(CRServo.Direction.REVERSE);
-//        inBackRight.setDirection(CRServo.Direction.REVERSE);
-//
-//        // Prepare angler to run to position later
-//        anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-//        anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-//        anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-//        anglerRight.setDirection(DcMotorExSimple.Direction.REVERSE);
-//        anglerLeft.setDirection(DcMotorExSimple.Direction.FORWARD);
-
-        leftFront.setDirection(DcMotorEx.Direction.FORWARD);
-        leftBack.setDirection(DcMotorEx.Direction.REVERSE);
-
+        if(sensors){
+            light = hardwareMap.get(Servo.class, "light");
+            color = hardwareMap.get(ColorSensor.class, "color");
+//            flDistance = hardwareMap.get(DistanceSensor.class, "flDistance");
+//            blDistance = hardwareMap.get(DistanceSensor.class, "blDistance");
+//            frDistance = hardwareMap.get(DistanceSensor.class, "frDistance");
+//            brDistance = hardwareMap.get(DistanceSensor.class, "brDistance");
+            light.setPosition(0.2);
+        }
         telemetry.addLine("Init complete");
         telemetry.update();
     }
 
-    // Run all the servos on the intake at input Power
-//    public void intakeRun(double power) {
-//        inFrontLeft.setPower(power);
-//        inFrontRight.setPower(power);
+//     Run all the servos on the intake at input Power
+    public void intakeRun(double power) {
+        inFrontLeft.setPower(power);
+        inFrontRight.setPower(power);
 //        inBackLeft.setPower(power);
 //        inBackRight.setPower(power);
-//        inMiddleLeft.setPower(power);
-//        inMiddleRight.setPower(power);
-//        telemetry.addData("Intake running at:", power);
-//    }
-//
-//    public void shoot(int angle, double speed) {
-//        // Spin both shooters
-//        shooterLeft.setPower(speed);
-//        shooterRight.setPower(speed); // fixed
-//
-//        int ticks = (int) Math.round(ANGLE_TO_TICKS * angle);
-//        // Move angler (requires RUN_TO_POSITION and power)
-//        anglerLeft.setTargetPosition(ticks);
-//        anglerRight.setTargetPosition(ticks);
-//        anglerLeft.setPower(ANGLER_SPEED);
-//        anglerRight.setPower(ANGLER_SPEED);
+        inMiddleLeft.setPower(power);
+        inMiddleRight.setPower(power);
+        telemetry.addData("Intake running at:", power);
+    }
+
+    public void stop_shooter() {
+
+        shooterLeft.setPower(0);
+        shooterRight.setPower(0);
+        anglerLeft.setPower(0);
+        anglerRight.setPower(0);
+        inBackLeft.setPower(0);
+        inBackRight.setPower(0);
+
+    }
+
+    public void shoot(int angle, double speed) {
+        // Spin both shooters
+        shooterLeft.setPower(speed);
+        shooterRight.setPower(speed); // fixed
+        shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        int ticks = (int) Math.round(ANGLE_TO_TICKS * angle);
+        anglerLeft.setPower(ANGLER_SPEED);
+        anglerRight.setPower(ANGLER_SPEED);
+        anglerLeft.setTargetPosition(ticks);
+        anglerRight.setTargetPosition(ticks);
+        sleep(500);
+        inBackLeft.setPower(1);
+        inBackRight.setPower(1);
 //
 //        // Brief non-tight wait to spin up (avoid freezing loop)
 //        long end = System.currentTimeMillis() + OUTTAKE_TIMEOUT;
-//        while (opModeIsActive() && System.currentTimeMillis() < end) {
+//        while (System.currentTimeMillis() < end) {
 //            telemetry.addLine("Speeding up Outtake");
 //            telemetry.update();
-//            idle();
 //        }
-//
-//        // Bumper fire and reset with a short delay
-//        bumperLeft.setPosition(BUMPING_POSITION);
-//        bumperRight.setPosition(BUMPING_POSITION);
-//        safeSleep(120);
-//        bumperLeft.setPosition(RESTING_POSITION);
-//        bumperRight.setPosition(RESTING_POSITION);
-//    }
+    }
 
     public void driveSpeed(double xPower, double yPower, double turnPower) {
         // Scale down
@@ -146,8 +172,8 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         if (Math.abs(turnPower) < MIN_SPEED_DRIVE) turnPower = 0;
 
         // Mecanum mix (robot-centric)
-        double lf = yPower - xPower - turnPower;
-        double lb = yPower + xPower - turnPower;
+        double lf = yPower + xPower - turnPower;
+        double lb = yPower - xPower - turnPower;
         double rb = yPower - xPower + turnPower;
         double rf = yPower + xPower + turnPower;
 
@@ -158,11 +184,6 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         rightFront.setPower(rf);
     }
 
-    // Helper to avoid tight blocking
-    private void safeSleep(long ms) {
-        long end = System.currentTimeMillis() + ms;
-        while (opModeIsActive() && System.currentTimeMillis() < end) {
-            idle();
-        }
-    }
+
+
 }
