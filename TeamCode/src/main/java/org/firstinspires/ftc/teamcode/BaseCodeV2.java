@@ -5,12 +5,15 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+
+import java.util.Locale;
 
 public abstract class BaseCodeV2 extends LinearOpMode {
 
@@ -40,6 +43,8 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     protected final double LIGHTGREEN = 0.477;
     protected final double LIGHTBLUE = 0.611;
     protected final double LIGHTPURPLE = 0.722;
+
+    protected double colors = LIGHTGREEN;
     protected final double MIN_SPEED_DRIVE = 0.2;
     protected final double ANGLER_SPEED = 0.1;
     protected final double DRIVE_SPEED_SCALE_DOWN = 0.5;
@@ -84,7 +89,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
             anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            anglerRight.setDirection(DcMotorEx.Direction.REVERSE);
+            anglerRight.setDirection(DcMotorEx.Direction.FORWARD);
             anglerLeft.setDirection(DcMotorEx.Direction.FORWARD);
         }
         // Init Servos
@@ -184,6 +189,44 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         rightFront.setPower(rf);
     }
 
+    public void telemetryOdometryUpdate() {
 
+        Pose2D pos = odo.getPosition();
+        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+        telemetry.addData("Position", data);
+    }
+        //TODO
+//
+//    telemetry.addData("Green: ", color.green());
+//            telemetry.addData("Blue: ", color.blue());
+//            telemetry.addData("Red: ", color.red());
+//            light.setPosition(Colors);
+//            if (color.green() > 1000) {
+//        telemetry.addLine("Ball collected");
+//        Colors = LIGHTPURPLE;
+//        sleep(1000);
+//
+//
+//    }
+//
+//            if (color.blue() > 1000) {
+//        telemetry.addLine("Ball collected");
+//        Colors = LIGHTPURPLE;
+//        sleep(1000);
+//
+//
+//
+//
+//    }
+//
+//            if (color.red() > 1000) {
+//        telemetry.addLine("Ball collected");
+//        Colors = LIGHTPURPLE;
+//        sleep(1000);
+//
+
+
+
+    }
 
 }
