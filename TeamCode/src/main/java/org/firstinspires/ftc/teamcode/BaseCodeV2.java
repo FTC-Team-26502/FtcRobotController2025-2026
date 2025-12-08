@@ -46,9 +46,9 @@ public abstract class BaseCodeV2 extends LinearOpMode {
 
     protected double colors = LIGHTGREEN;
     protected final double MIN_SPEED_DRIVE = 0.2;
-    protected final double ANGLER_SPEED = 0.1;
-    protected final double DRIVE_SPEED_SCALE_DOWN = 0.5;
-    protected final double ANGLE_TO_TICKS = 537.7/360;
+    protected final double ANGLER_SPEED = 0.05;
+    protected final double DRIVE_SPEED_SCALE_DOWN = 1;
+    protected final double ANGLE_TO_TICKS = 1;
     protected final long OUTTAKE_TIMEOUT = 300;
 
     public void initOpMode(boolean drive, boolean odometry, boolean shooter, boolean intake, boolean sensors) {
@@ -83,13 +83,15 @@ public abstract class BaseCodeV2 extends LinearOpMode {
             anglerRight = hardwareMap.get(DcMotorEx.class, "anglerRight");
             shooterLeft = hardwareMap.get(DcMotorEx.class, "shooterLeft");
             shooterRight = hardwareMap.get(DcMotorEx.class, "shooterRight");
+            shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+            shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
             anglerLeft.setTargetPosition(0);
             anglerRight.setTargetPosition(0);
             anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
             anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-            anglerRight.setDirection(DcMotorEx.Direction.FORWARD);
+            anglerRight.setDirection(DcMotorEx.Direction.REVERSE);
             anglerLeft.setDirection(DcMotorEx.Direction.FORWARD);
         }
         // Init Servos
@@ -153,7 +155,17 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         anglerRight.setPower(ANGLER_SPEED);
         anglerLeft.setTargetPosition(ticks);
         anglerRight.setTargetPosition(ticks);
-        sleep(500);
+        while (anglerLeft.getPower()> 0.5) {
+            if (anglerLeft.getCurrentPosition() < 42 & anglerLeft.getCurrentPosition() > 38) {
+                anglerLeft.setTargetPosition(anglerLeft.getCurrentPosition());
+                anglerRight.setTargetPosition(anglerRight.getCurrentPosition());
+            }
+            telemetry.addData("Power", anglerLeft.getPower());
+            telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
+            telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
+            telemetry.update();
+        }
+        sleep(1000);
         inBackLeft.setPower(1);
         inBackRight.setPower(1);
 //
@@ -179,8 +191,8 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         // Mecanum mix (robot-centric)
         double lf = yPower + xPower - turnPower;
         double lb = yPower - xPower - turnPower;
-        double rb = yPower - xPower + turnPower;
-        double rf = yPower + xPower + turnPower;
+        double rb = yPower + xPower + turnPower;
+        double rf = yPower - xPower + turnPower;
 
         //Set motor powers
         leftFront.setPower(lf);
@@ -189,12 +201,12 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         rightFront.setPower(rf);
     }
 
-    public void telemetryOdometryUpdate() {
-
-        Pose2D pos = odo.getPosition();
-        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
-        telemetry.addData("Position", data);
-    }
+//    public void telemetryOdometryUpdate() {
+//
+//        Pose2D pos = odo.getPosition();
+////        String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
+//        telemetry.addData("Position", data);
+//    }
         //TODO
 //
 //    telemetry.addData("Green: ", color.green());
@@ -229,4 +241,4 @@ public abstract class BaseCodeV2 extends LinearOpMode {
 
     }
 
-}
+//}
