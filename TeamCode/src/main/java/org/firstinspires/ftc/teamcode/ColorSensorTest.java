@@ -21,12 +21,11 @@ public class ColorSensorTest extends BaseCodeV2{
         initOpMode(true, true, false, false, true);
         waitForStart();
         while (opModeIsActive()) {
-            if (color.blue()>2000){
-                telemetry.addLine("Purple Ball Detected");
-                sleep(5000);
-            } else if(color.green()>1500){
+            } if(color.green()>2000){
                 telemetry.addLine("Green Ball Detected");
                 sleep(5000);
+            } else if (color.red()>1500) {
+                telemetry.addLine("Purple Ball Detected");
             }
             telemetry.addData("Green: ", color.green());
             telemetry.addData("Blue: ", color.blue());
@@ -35,4 +34,4 @@ public class ColorSensorTest extends BaseCodeV2{
         }
 
     }
-}
+

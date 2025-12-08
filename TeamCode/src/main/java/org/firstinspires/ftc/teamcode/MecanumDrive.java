@@ -70,10 +70,10 @@ public final class MecanumDrive {
         // feedforward parameters (in tick units)
         public double kS = 0.6584110214421628;
         public double kV =  0.0008237266966049536;
-        public double kA = 0;
+        public double kA = 0.0001;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 50;
+        public double maxWheelVel = 30;
         public double minProfileAccel = -30;
         public double maxProfileAccel = 50;
 
@@ -82,9 +82,9 @@ public final class MecanumDrive {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 0.0;
-        public double lateralGain = 0.0;
-        public double headingGain = 0.0; // shared with turn
+        public double axialGain = 1.0;
+        public double lateralGain = -10.0;
+        public double headingGain = 9.0; // shared with turn
 
         public double axialVelGain = 0.0;
         public double lateralVelGain = 0.0;
@@ -265,10 +265,10 @@ public final class MecanumDrive {
             maxPowerMag = Math.max(maxPowerMag, power.value());
         }
 
-        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag * );
+        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag * FRONT_SCALE);
         leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
         rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
-        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
+        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag * FRONT_SCALE);
     }
 
     public final class FollowTrajectoryAction implements Action {
@@ -328,10 +328,10 @@ public final class MecanumDrive {
 
             final MotorFeedforward feedforward = new MotorFeedforward(PARAMS.kS,
                     PARAMS.kV / PARAMS.inPerTick, PARAMS.kA / PARAMS.inPerTick);
-            double leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage;
+            double leftFrontPower = FRONT_SCALE*(feedforward.compute(wheelVels.leftFront) / voltage);
             double leftBackPower = feedforward.compute(wheelVels.leftBack) / voltage;
             double rightBackPower = feedforward.compute(wheelVels.rightBack) / voltage;
-            double rightFrontPower = feedforward.compute(wheelVels.rightFront) / voltage;
+            double rightFrontPower = FRONT_SCALE*(feedforward.compute(wheelVels.rightFront) / voltage);
             mecanumCommandWriter.write(new MecanumCommandMessage(
                     voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
             ));

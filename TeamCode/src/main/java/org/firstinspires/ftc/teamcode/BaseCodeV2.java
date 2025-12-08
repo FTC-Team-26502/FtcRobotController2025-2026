@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import java.util.Locale;
+import java.util.Map;
 
 public abstract class BaseCodeV2 extends LinearOpMode {
 
@@ -50,6 +51,10 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     protected final double DRIVE_SPEED_SCALE_DOWN = 1;
     protected final double ANGLE_TO_TICKS = 1;
     protected final long OUTTAKE_TIMEOUT = 300;
+    protected final double DELTA_Y = 0.9; //meters
+    protected final double GRAVITY = 9.80665; // m/s^2
+    protected double speed= 0.5;
+    protected final int ANGLE = 61;
 
     public void initOpMode(boolean drive, boolean odometry, boolean shooter, boolean intake, boolean sensors) {
         // Init Motors
@@ -111,10 +116,10 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         if(sensors){
             light = hardwareMap.get(Servo.class, "light");
             color = hardwareMap.get(ColorSensor.class, "color");
-//            flDistance = hardwareMap.get(DistanceSensor.class, "flDistance");
-//            blDistance = hardwareMap.get(DistanceSensor.class, "blDistance");
-//            frDistance = hardwareMap.get(DistanceSensor.class, "frDistance");
-//            brDistance = hardwareMap.get(DistanceSensor.class, "brDistance");
+            flDistance = hardwareMap.get(DistanceSensor.class, "flDistance");
+            blDistance = hardwareMap.get(DistanceSensor.class, "blDistance");
+            frDistance = hardwareMap.get(DistanceSensor.class, "frDistance");
+            brDistance = hardwareMap.get(DistanceSensor.class, "brDistance");
             light.setPosition(0.2);
         }
         telemetry.addLine("Init complete");
@@ -143,14 +148,15 @@ public abstract class BaseCodeV2 extends LinearOpMode {
 
     }
 
-    public void shoot(int angle, double speed) {
+    public void shoot() {
         // Spin both shooters
+        speed = calculateShootingSpeed((blDistance.getDistance(DistanceUnit.METER)+brDistance.getDistance(DistanceUnit.METER))/2);
         shooterLeft.setPower(speed);
         shooterRight.setPower(speed); // fixed
         shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        int ticks = (int) Math.round(ANGLE_TO_TICKS * angle);
+        int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE);
         anglerLeft.setPower(ANGLER_SPEED);
         anglerRight.setPower(ANGLER_SPEED);
         anglerLeft.setTargetPosition(ticks);
@@ -177,6 +183,13 @@ public abstract class BaseCodeV2 extends LinearOpMode {
 //        }
     }
 
+    public double calculateShootingSpeed(double d){
+        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/11;
+        telemetry.addData("D", d);
+        telemetry.addData("SPEED", speed);
+        telemetry.update();
+        return speed;
+    }
     public void driveSpeed(double xPower, double yPower, double turnPower) {
         // Scale down
         xPower *= DRIVE_SPEED_SCALE_DOWN;

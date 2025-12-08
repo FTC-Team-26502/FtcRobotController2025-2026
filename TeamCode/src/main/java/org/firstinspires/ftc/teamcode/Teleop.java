@@ -24,7 +24,7 @@ public class Teleop extends BaseCodeV2{
             } else if (gamepad1.b) {
                 intakeRun(0);
             } else if (gamepad1.x) {
-                shoot(60, 1);
+                shoot();
             } else if (gamepad1.y) {
                 anglerLeft.setTargetPosition(0);
                 anglerRight.setTargetPosition(0);
