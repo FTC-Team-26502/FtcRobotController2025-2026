@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
+
+import static java.lang.Thread.sleep;
+
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ftc.StructSchema;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -27,39 +32,48 @@ import java.util.Map;
  * @author dorinamevans@gmail.com
  */
 @Autonomous
-public class AutoOne extends BaseCodeV2{
-    private MecanumDrive drive;
+public class AutoOne extends BaseCodeV3{
 
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode(false, true, true, true, true);
+        initRobot(true, true, true, true, true);
         Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
         drive = new MecanumDrive(hardwareMap, startPose);
         // Build your trajectory sequence
-        TrajectoryActionBuilder traj = drive.actionBuilder(startPose)
+        TrajectoryActionBuilder traj1 = drive.actionBuilder(startPose)
                 .splineToConstantHeading(new Vector2d (20,-20), Math.toRadians(-45));
 
-        Action trajectoryActionCloseOut = traj.endTrajectory().fresh()
+        Action trajectoryActionCloseOut1 = traj1.endTrajectory().fresh()
                         .build();
+        TrajectoryActionBuilder traj2 = drive.actionBuilder(startPose)
+                .splineTo(new Vector2d(-12,30),Math.toRadians(90))
+                .splineToConstantHeading(new Vector2d(-30, 30), Math.toRadians(0))
+                .splineTo(new Vector2d (20,-20), Math.toRadians(-45));
+
+        Action trajectoryActionCloseOut2 = traj2.endTrajectory().fresh()
+                .build();
         waitForStart();
 
 
-        Action trajectory = traj.build();
+        Action trajectory1 = traj1.build();
+        Action trajectory2 = traj2.build();
         // Follow the trajectory sequence synchronously (blocks until finished)
         Actions.runBlocking(
             new SequentialAction(
-                    trajectory,
-                    trajectoryActionCloseOut
+                    trajectory1,
+                    trajectoryActionCloseOut1,
+                    shooter.shoot(),
+                    sleep(500),
+                    intake.run(),
+                    sleep(500),
+                    intake.stop(),
+                    sleep(1000),
+                    intake.run(),
+                    sleep(3000),
+                    trajectory2,
+                    trajectoryActionCloseOut2,
+                    shooter.shoot()
             )
         );
-        shoot();
-        sleep(1000);
-        intakeRun(1);
-        sleep(500);
-        intakeRun(0);
-        sleep(1000);
-        intakeRun(1);
-        sleep(5000);
-        intakeRun(0);
     }
 }
