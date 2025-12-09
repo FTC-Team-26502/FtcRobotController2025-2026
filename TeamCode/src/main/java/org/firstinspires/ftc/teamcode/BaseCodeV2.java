@@ -54,7 +54,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     protected final double DELTA_Y = 0.9; //meters
     protected final double GRAVITY = 9.80665; // m/s^2
     protected double speed= 0.5;
-    protected final int ANGLE = 61;
+    protected final int ANGLE = 50;
 
     public void initOpMode(boolean drive, boolean odometry, boolean shooter, boolean intake, boolean sensors) {
         // Init Motors
@@ -171,7 +171,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
             telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
             telemetry.update();
         }
-        sleep(1000);
+        sleep(2000);
         inBackLeft.setPower(1);
         inBackRight.setPower(1);
 //
@@ -184,7 +184,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     }
 
     public double calculateShootingSpeed(double d){
-        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/11;
+        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/45;
         telemetry.addData("D", d);
         telemetry.addData("SPEED", speed);
         telemetry.update();
@@ -194,7 +194,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         // Scale down
         xPower *= DRIVE_SPEED_SCALE_DOWN;
         yPower *= DRIVE_SPEED_SCALE_DOWN;
-        turnPower *= DRIVE_SPEED_SCALE_DOWN;
+        turnPower *=      DRIVE_SPEED_SCALE_DOWN;
 
         // Deadzones on absolute value
         if (Math.abs(xPower) < MIN_SPEED_DRIVE) xPower = 0;

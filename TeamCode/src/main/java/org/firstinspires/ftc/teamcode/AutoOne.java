@@ -1,5 +1,12 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
+//import com.acmerobotics.roadrunner.trajectory.sequences;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -18,24 +25,38 @@ import java.util.Map;
 
 @Autonomous
 public class AutoOne extends BaseCodeV2{
-    private MechanumDrive drive;
+    private MecanumDrive drive;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initOpMode(false, true, true, true, true);
-        drive = new MechanumDrive(hardwareMap);
         Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
-        drive.setPoseEstimate(startPose);
+        drive = new MecanumDrive(hardwareMap, startPose);
         // Build your trajectory sequence
-        TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
-                .forward(-30)                           // go forward 24 in
-                .build();
+        TrajectoryActionBuilder traj = drive.actionBuilder(startPose)
+                .splineToConstantHeading(new Vector2d (20,-20), Math.toRadians(-45));
+
+        Action trajectoryActionCloseOut = traj.endTrajectory().fresh()
+                        .build();
         waitForStart();
-        
-        
+
+
+        Action trajectory = traj.build();
         // Follow the trajectory sequence synchronously (blocks until finished)
-        drive.followTrajectorySequence(traj);
-        telemetry.addLine("Stopped shooting now");
+        Actions.runBlocking(
+            new SequentialAction(
+                    trajectory,
+                    trajectoryActionCloseOut
+            )
+        );
         shoot();
+        sleep(1000);
+        intakeRun(1);
+        sleep(500);
+        intakeRun(0);
+        sleep(1000);
+        intakeRun(1);
+        sleep(5000);
+        intakeRun(0);
     }
 }
