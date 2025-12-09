@@ -184,7 +184,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     }
 
     public double calculateShootingSpeed(double d){
-        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/45;
+        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/55;
         telemetry.addData("D", d);
         telemetry.addData("SPEED", speed);
         telemetry.update();
@@ -194,7 +194,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         // Scale down
         xPower *= DRIVE_SPEED_SCALE_DOWN;
         yPower *= DRIVE_SPEED_SCALE_DOWN;
-        turnPower *=      DRIVE_SPEED_SCALE_DOWN;
+        turnPower *= DRIVE_SPEED_SCALE_DOWN;
 
         // Deadzones on absolute value
         if (Math.abs(xPower) < MIN_SPEED_DRIVE) xPower = 0;

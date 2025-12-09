@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp
-public class testingshooter extends BaseCodeV2{
+public class ShooterTest extends BaseCodeV2{
 
     double Colors = LIGHTGREEN;
     @Override
