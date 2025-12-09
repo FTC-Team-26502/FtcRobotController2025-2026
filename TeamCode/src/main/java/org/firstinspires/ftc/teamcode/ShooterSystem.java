@@ -12,9 +12,11 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class ShooterSystem {
+    private final Telemetry telemetry;
     private DcMotorEx anglerLeft, anglerRight;
     private DcMotorEx shooterLeft, shooterRight;
     private DistanceSensor blDist, brDist;
@@ -27,7 +29,7 @@ public class ShooterSystem {
     protected final int SPEED_MULTIPLIER = 15;
     protected final int ANGLE_OF_SHOOTER = 45;
 
-    ShooterSystem(HardwareMap hw) {
+    ShooterSystem(HardwareMap hw, Telemetry telemetry) {
         anglerLeft = hw.get(DcMotorEx.class, "anglerLeft");
         anglerRight = hw.get(DcMotorEx.class, "anglerRight");
         shooterLeft = hw.get(DcMotorEx.class, "shooterLeft");
@@ -53,32 +55,56 @@ public class ShooterSystem {
         br = hw.get(CRServo.class, "inBackRight");
 
         bl.setDirection(DcMotorSimple.Direction.REVERSE);
+        this.telemetry = telemetry;
     }
 
     public Action setupShoot() {
-        return buildShootingSetup();
-    }
-    public Action buildShootingSetup() {
-        return new SequentialAction(
-                new ShooterSetup()
-        );
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet){
+                double speed = calcSpeed();
+                shooterLeft.setPower(speed);
+                shooterRight.setPower(speed);
+                int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE_OF_SHOOTER);
+                anglerLeft.setPower(ANGLER_SPEED);
+                anglerRight.setPower(ANGLER_SPEED);
+                anglerLeft.setTargetPosition(ticks);
+                anglerRight.setTargetPosition(ticks);
+                telemetry.addLine("Shooting setup done");
+                telemetry.update();
+                return false;
+            }
+        };
+
     }
 
     public Action shoot(){
-        return buildStartShootingSetup();
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                bl.setPower(1);
+                br.setPower(1);
+                telemetry.addLine("Shooting");
+                telemetry.update();
+                return false;
+            }
+        };
     }
-    public Action buildStartShootingSetup(){
-        return new SequentialAction(
-                new ShooterFeed()
-        );
-    }
-    public Action buildStopShooting(){
-        return new SequentialAction(
-                new ShooterStop()
-        );
-    }
+
     public Action stop(){
-        return buildStopShooting();
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                shooterLeft.setPower(0);
+                shooterRight.setPower(0);
+                anglerLeft.setPower(0);
+                anglerRight.setPower(0);
+                telemetry.addLine("Shooting stopped");
+                telemetry.update();
+                return false;
+            }
+        };
     }
 
     double calcSpeed() {
@@ -86,46 +112,5 @@ public class ShooterSystem {
         return (d * Math.sqrt(GRAVITY / (d - DELTA_Y))) / SPEED_MULTIPLIER;
     }
 
-    public class ShooterSetup implements Action {
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            double speed = calcSpeed();
-            shooterLeft.setPower(speed);
-            shooterRight.setPower(speed);
-            int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE_OF_SHOOTER);
-            anglerLeft.setPower(ANGLER_SPEED);
-            anglerRight.setPower(ANGLER_SPEED);
-            anglerLeft.setTargetPosition(ticks);
-            anglerRight.setTargetPosition(ticks);
-            new SleepAction(0.5);
-            bl.setPower(1);
-            br.setPower(1);
-            packet.addLine("Shooting done");
-            return false;
-        }
-
-    }
-
-    public class ShooterFeed implements Action {
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            bl.setPower(1);
-            br.setPower(1);
-            return false;
-        }
-    }
-
-    public class ShooterStop implements Action{
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            shooterLeft.setPower(0);
-            shooterRight.setPower(0);
-            anglerLeft.setPower(0);
-            anglerRight.setPower(0);
-            return false;
-        }
-    }
 }
 

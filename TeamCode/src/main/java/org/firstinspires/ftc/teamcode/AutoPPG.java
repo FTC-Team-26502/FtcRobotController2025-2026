@@ -20,7 +20,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Author: dorinamevans@gmail.com
  */
 @Autonomous(name = "AutoOne", group = "Autonomous")
-public class AutoOne extends BaseCodeV3 {
+public class AutoPPG extends BaseCodeV3 {
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -62,43 +62,43 @@ public class AutoOne extends BaseCodeV3 {
                         traj1,
                         closeOut1,
 
-//                        new Action() {
-//                            @Override
-//                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                                telemetry.addLine("Before shoot");
-//                                telemetry.update();
-//                                return false;
-//                            }
-//                        },
-//                        // Example shooter action; ensure shoot() returns Action
-//                        shooter.setupShoot(),
-//                        new Action() {
-//                            @Override
-//                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                                telemetry.addLine("Done shoot");
-//                                telemetry.update();
-//                                return false;
-//                            }
-//                        },
-//                        // Sleep actions; ensure sleepAction returns Action
-//                        new SleepAction(0.5),
-//
-//                        // Intake actions; ensure these return Action
-//                        intake.startIntake(),
-//                        new Action() {
-//                            @Override
-//                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                                telemetry.update();
-//                                return false;
-//                            }
-//                        },
-//                        new SleepAction(0.500),
-//                        intake.stopIntake(),
-//                        new SleepAction(1.000),
-//                        intake.startIntake(),
-//                        new SleepAction(3.000),
-//
-//                        shooter.stop(),
+                        new Action() {
+                            @Override
+                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                telemetry.addLine("Before shoot");
+                                telemetry.update();
+                                return false;
+                            }
+                        },
+                        // Example shooter action; ensure shoot() returns Action
+                        shooter.setupShoot(),
+                        new Action() {
+                            @Override
+                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                telemetry.addLine("Done shoot");
+                                telemetry.update();
+                                return false;
+                            }
+                        },
+                        // Sleep actions; ensure sleepAction returns Action
+                        new SleepAction(0.5),
+
+                        // Intake actions; ensure these return Action
+                        intake.startIntake(),
+                        new Action() {
+                            @Override
+                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                telemetry.update();
+                                return false;
+                            }
+                        },
+                        new SleepAction(0.500),
+                        intake.stopIntake(),
+                        new SleepAction(1.000),
+                        intake.startIntake(),
+                        new SleepAction(3.000),
+
+                        shooter.stop(),
 
                         traj2,
                         closeOut2

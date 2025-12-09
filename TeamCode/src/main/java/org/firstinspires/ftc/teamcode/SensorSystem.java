@@ -9,6 +9,8 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
@@ -21,19 +23,19 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import java.util.Locale;
 import java.util.Map;
 
-class SensorSystem {
+public class SensorSystem {
 
     final Servo light;
     final ColorSensor color;
     protected DistanceSensor fl;
     protected DistanceSensor fr;
-    protected final double LIGHTRED = 0.3;
-    protected final double LIGHTYELLOW = 0.388;
-    protected final double LIGHTGREEN = 0.477;
-    protected final double LIGHTBLUE = 0.611;
-    protected final double LIGHTPURPLE = 0.722;
+    protected static final double LIGHTRED = 0.3;
+    protected static final double LIGHTYELLOW = 0.388;
+    protected static final double LIGHTGREEN = 0.477;
+    protected static final double LIGHTBLUE = 0.611;
+    protected static final double LIGHTPURPLE = 0.722;
 
-    SensorSystem(HardwareMap hw) {
+    SensorSystem(HardwareMap hw, Telemetry telemetry) {
         light = hw.get(Servo.class, "light");
         color = hw.get(ColorSensor.class, "color");
         fl = hw.get(DistanceSensor.class, "flDistance");

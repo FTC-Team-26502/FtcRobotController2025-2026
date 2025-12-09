@@ -8,11 +8,15 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 class IntakeSystem {
 
-    private CRServo fl, fr, ml, mr, bl, br;
+    private final CRServo fl, fr, ml, mr;
+    private final Telemetry telemetry;
 
-    IntakeSystem(HardwareMap hw) {
+    IntakeSystem(HardwareMap hw, Telemetry telemetry) {
+        this.telemetry = telemetry;
         fl = hw.get(CRServo.class, "inFrontLeft");
         fr = hw.get(CRServo.class, "inFrontRight");
         ml = hw.get(CRServo.class, "inMiddleLeft");
@@ -20,74 +24,37 @@ class IntakeSystem {
 
         fl.setDirection(CRServo.Direction.REVERSE);
         ml.setDirection(CRServo.Direction.REVERSE);
+        telemetry.addLine("Intake initialized");
     }
 
 
     public Action stopIntake(){
-        return buildStop();
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                fl.setPower(0);
+                fr.setPower(0);
+                ml.setPower(0);
+                mr.setPower(0);
+                return false;
+            }
+        };
     }
-    public Action buildStop(){
-        return new SequentialAction(
-                new stop()
-        );
-    }
-    public class stop implements Action {
 
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            fl.setPower(0);
-            fr.setPower(0);
-            ml.setPower(0);
-            mr.setPower(0);
-            return true;
-        }
-
-    }
     public Action startIntake(){
-        return buildStart();
-    }
-    public Action buildStart(){
-        return new SequentialAction(
-                new Start()
-        );
-    }
-    public class Start implements Action {
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            packet.addLine("Intake");
-            fl.setPower(1);
-            fr.setPower(1);
-            ml.setPower(1);
-            mr.setPower(1);
-            packet.addLine("Intake");
-            return false;
-        }
-
-    }
-    public class runIntake implements Action {
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            fl.setPower(1);
-            fr.setPower(1);
-            ml.setPower(1);
-            mr.setPower(1);
-            return false;
-        }
-
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                telemetry.addLine("Intake Start");
+                fl.setPower(1);
+                fr.setPower(1);
+                ml.setPower(1);
+                mr.setPower(1);
+                telemetry.addLine("Intake Started");
+                telemetry.update();
+                return false;
+            }
+        };
     }
 
-    public class stopIntake implements Action {
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet){
-            fl.setPower(0);
-            fr.setPower(0);
-            ml.setPower(0);
-            mr.setPower(0);
-            return false;
-        }
-
-    }
 }
