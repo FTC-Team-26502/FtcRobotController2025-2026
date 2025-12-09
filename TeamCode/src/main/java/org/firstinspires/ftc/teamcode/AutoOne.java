@@ -18,14 +18,24 @@ import java.util.Map;
 
 @Autonomous
 public class AutoOne extends BaseCodeV2{
+    private MechanumDrive drive;
+
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode(true, true, true, true, true);
+        initOpMode(false, true, true, true, true);
+        drive = new MechanumDrive(hardwareMap);
+        Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
+        drive.setPoseEstimate(startPose);
+        // Build your trajectory sequence
+        TrajectorySequence traj = drive.trajectorySequenceBuilder(startPose)
+                .forward(-30)                           // go forward 24 in
+                .build();
         waitForStart();
-        while (opModeIsActive()) {
-
-            telemetry.addLine("Stoped shooting now");
-            shoot();
-        }
+        
+        
+        // Follow the trajectory sequence synchronously (blocks until finished)
+        drive.followTrajectorySequence(traj);
+        telemetry.addLine("Stopped shooting now");
+        shoot();
     }
 }
