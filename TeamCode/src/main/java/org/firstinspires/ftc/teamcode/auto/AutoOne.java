@@ -5,7 +5,6 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-//import com.acmerobotics.roadrunner.trajectory.sequences;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -23,6 +22,10 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * First version of autonomous code for Decode.
+ * @author dorinamevans@gmail.com
+ */
 @Autonomous
 public class AutoOne extends BaseCodeV2{
     private MecanumDrive drive;
