@@ -36,21 +36,34 @@ public class AutoPPG extends BaseCodeV3 {
         // Build first trajectory from the start pose
         TrajectoryActionBuilder tab1 = drive.actionBuilder(startPose)
                 .splineToConstantHeading(new Vector2d(-12, 12), Math.toRadians(-45));
-
         // Action that ensures pose is set to end of traj1 (optional)
+
         Action closeOut1 = tab1.endTrajectory().fresh().build();
 
         // If you want traj2 to start where traj1 ends, start from endTrajectory()
         TrajectoryActionBuilder tab2 = tab1.endTrajectory().fresh()
-                .splineTo(new Vector2d(-72, 30), Math.toRadians(90));
-//                .splineToConstantHeading(new Vector2d(-30, 30), Math.toRadians(0))
-//                .splineTo(new Vector2d(20, -20), Math.toRadians(-45));
-
+                .splineToConstantHeading(new Vector2d(-5, 5), Math.toRadians(-45));
         Action closeOut2 = tab2.endTrajectory().fresh().build();
+        TrajectoryActionBuilder tab3 = tab2.endTrajectory().fresh()
+                .splineToConstantHeading(new Vector2d(0,0), Math.toRadians(-45));
 
+
+        Action closeOut3 = tab3.endTrajectory().fresh().build();
+
+        TrajectoryActionBuilder tab4 = tab3.endTrajectory().fresh()
+                .turnTo(Math.toRadians(180))
+                .splineToConstantHeading(new Vector2d(-65, 25), Math.toRadians(180));
+        Action closeOut4 = tab4.endTrajectory().fresh().build();
+        TrajectoryActionBuilder tab5 = tab4.endTrajectory().fresh()
+                .splineToConstantHeading(new Vector2d(-12, 12), Math.toRadians(180))
+                .turnTo(Math.toRadians(-40));
+        Action closeOut5 = tab5.endTrajectory().fresh().build();
         // Build the trajectory actions
         Action traj1 = tab1.build();
         Action traj2 = tab2.build();
+        Action traj3 = tab3.build();;
+        Action traj4 = tab4.build();
+        Action traj5 = tab5.build();
 
         // Wait for the start command
         waitForStart();
@@ -82,6 +95,10 @@ public class AutoPPG extends BaseCodeV3 {
                         },
                         // Sleep actions; ensure sleepAction returns Action
                         new SleepAction(0.5),
+                        shooter.shoot(),
+                        new SleepAction(1),
+                        traj2,
+                        closeOut2,
 
                         // Intake actions; ensure these return Action
                         intake.startIntake(),
@@ -94,19 +111,41 @@ public class AutoPPG extends BaseCodeV3 {
                         },
                         new SleepAction(0.500),
                         intake.stopIntake(),
+                        new SleepAction(0.500),
+                        traj3,
+                        closeOut3,
                         new SleepAction(1.000),
                         intake.startIntake(),
-                        new SleepAction(3.000),
+                        new SleepAction(4.000),
 
                         shooter.stop(),
-
-                        traj2,
-                        closeOut2
-
-                        // Final shot
-//                        shooter.setupShoot(),
-//                        new SleepAction(500),
-//                        shooter.stop()
+//
+                        traj4,
+                        closeOut4,
+                        new SleepAction(0.500),
+                        traj5,
+                        closeOut5,
+                        // Example shooter action; ensure shoot() returns Action
+                        shooter.setupShoot(),
+                        new Action() {
+                            @Override
+                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                telemetry.addLine("Done shoot");
+                                telemetry.update();
+                                return false;
+                            }
+                        },
+                        // Sleep actions; ensure sleepAction returns Action
+                        new SleepAction(1),
+                        shooter.shoot(),
+                        new SleepAction(1),
+                        shooter.stop()
+//
+//
+//                        // Final shot
+////                        shooter.setupShoot(),
+////                        new SleepAction(500),
+////                        shooter.stop()
                 )
         );
     }

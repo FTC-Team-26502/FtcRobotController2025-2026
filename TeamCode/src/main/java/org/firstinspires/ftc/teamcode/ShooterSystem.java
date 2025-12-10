@@ -26,7 +26,7 @@ public class ShooterSystem {
     private final double ANGLE_TO_TICKS = (1/360.0) * 537.6;
     private final double DELTA_Y = 0.9;
     private final double GRAVITY = 9.80665;
-    protected final int SPEED_MULTIPLIER = 15;
+    protected final int SPEED_MULTIPLIER = 10;
     protected final int ANGLE_OF_SHOOTER = 45;
 
     ShooterSystem(HardwareMap hw, Telemetry telemetry) {
@@ -100,6 +100,8 @@ public class ShooterSystem {
                 shooterRight.setPower(0);
                 anglerLeft.setPower(0);
                 anglerRight.setPower(0);
+                br.setPower(0);
+                bl.setPower(0);
                 telemetry.addLine("Shooting stopped");
                 telemetry.update();
                 return false;
