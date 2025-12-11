@@ -6,17 +6,25 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.Locale;
 import java.util.Map;
 
 public abstract class BaseCodeV2 extends LinearOpMode {
+
+    private VisionSystem vision;
 
     protected GoBildaPinpointDriver odo;
     protected DcMotorEx leftFront;
@@ -45,7 +53,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     protected final double LIGHTBLUE = 0.611;
     protected final double LIGHTPURPLE = 0.722;
 
-    protected double colors = LIGHTGREEN;
+    protected double col = LIGHTRED;
     protected final double MIN_SPEED_DRIVE = 0.2;
     protected final double ANGLER_SPEED = 0.05;
     protected final double DRIVE_SPEED_SCALE_DOWN = 1;
@@ -120,6 +128,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
             blDistance = hardwareMap.get(DistanceSensor.class, "blDistance");
             frDistance = hardwareMap.get(DistanceSensor.class, "frDistance");
             brDistance = hardwareMap.get(DistanceSensor.class, "brDistance");
+            vision = new VisionSystem(hardwareMap, telemetry);
             light.setPosition(0.2);
         }
         telemetry.addLine("Init complete");
@@ -145,35 +154,69 @@ public abstract class BaseCodeV2 extends LinearOpMode {
         anglerRight.setPower(0);
         inBackLeft.setPower(0);
         inBackRight.setPower(0);
+        light.setPosition(0);
 
     }
 
-    public void shoot() {
-        // Spin both shooters
-        speed = calculateShootingSpeed((blDistance.getDistance(DistanceUnit.METER)+brDistance.getDistance(DistanceUnit.METER))/2);
-        shooterLeft.setPower(speed);
-        shooterRight.setPower(speed); // fixed
-        shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
+    public boolean shooting_okay() {
 
-        int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE);
-        anglerLeft.setPower(ANGLER_SPEED);
-        anglerRight.setPower(ANGLER_SPEED);
-        anglerLeft.setTargetPosition(ticks);
-        anglerRight.setTargetPosition(ticks);
-        while (anglerLeft.getPower()> 0.5) {
-            if (anglerLeft.getCurrentPosition() < 42 & anglerLeft.getCurrentPosition() > 38) {
-                anglerLeft.setTargetPosition(anglerLeft.getCurrentPosition());
-                anglerRight.setTargetPosition(anglerRight.getCurrentPosition());
-            }
-            telemetry.addData("Power", anglerLeft.getPower());
-            telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
-            telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
-            telemetry.update();
+        boolean canShoot = vision.shootingCheck();
+        if(!canShoot) {
+
+            light.setPosition(LIGHTRED);
+            return false;       
+
+        } else {
+
+            light.setPosition(LIGHTBLUE);
+            return true;
+
         }
-        sleep(2000);
-        inBackLeft.setPower(1);
-        inBackRight.setPower(1);
+
+    }
+
+
+
+
+
+
+    public void shoot() {
+        boolean canShoot = vision.shootingCheck(); // prints pose if true
+
+        if (!canShoot) {
+            telemetry.addLine("CAN'T SHOOT");
+            telemetry.update();
+            light.setPosition(LIGHTRED);
+
+        } else {
+            light.setPosition(LIGHTGREEN);
+
+            // Spin both shooters
+            speed = calculateShootingSpeed((blDistance.getDistance(DistanceUnit.METER)+brDistance.getDistance(DistanceUnit.METER))/2);
+            shooterLeft.setPower(speed);
+            shooterRight.setPower(speed); // fixed
+            shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+            shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE);
+            anglerLeft.setPower(ANGLER_SPEED);
+            anglerRight.setPower(ANGLER_SPEED);
+            anglerLeft.setTargetPosition(ticks);
+            anglerRight.setTargetPosition(ticks);
+            while (anglerLeft.getPower()> 0.5) {
+                if (anglerLeft.getCurrentPosition() < 42 & anglerLeft.getCurrentPosition() > 38) {
+                    anglerLeft.setTargetPosition(anglerLeft.getCurrentPosition());
+                    anglerRight.setTargetPosition(anglerRight.getCurrentPosition());
+                }
+                telemetry.addData("Power", anglerLeft.getPower());
+                telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
+                telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
+                telemetry.update();
+            }
+            sleep(2000);
+            inBackLeft.setPower(1);
+            inBackRight.setPower(1);
+        }
 //
 //        // Brief non-tight wait to spin up (avoid freezing loop)
 //        long end = System.currentTimeMillis() + OUTTAKE_TIMEOUT;
@@ -184,7 +227,7 @@ public abstract class BaseCodeV2 extends LinearOpMode {
     }
 
     public double calculateShootingSpeed(double d){
-        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/55;
+        speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/12;
         telemetry.addData("D", d);
         telemetry.addData("SPEED", speed);
         telemetry.update();

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -11,104 +10,86 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
 public class VisionSystem {
 
-    private Telemetry telemetry;
+    private final Telemetry telemetry;
 
+    // Set this to your actual camera mount relative to the robot center
+    private final Position cameraPosition = new Position(
+            DistanceUnit.INCH,
+            0,   // X: right (+), left (-)
+            0,   // Y: forward (+), back (-)
+            0,   // Z: up (+), down (-)
+            0
+    );
 
-    private Position cameraPosition = new Position(DistanceUnit.INCH,
-            0, 0, 0, 0);
-    private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES,
-            0, -90, 0, 0);
+    // Orientation of the camera relative to robot (Yaw, Pitch, Roll)
+    private final YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(
+            AngleUnit.DEGREES,
+            0,   // Yaw
+            -90, // Pitch
+            0,   // Roll
+            0
+    );
 
-    /**
-     * The variable to store our instance of the AprilTag processor.
-     */
-    private AprilTagProcessor aprilTag;
-
-    /**
-     * The variable to store our instance of the vision portal.
-     */
-    private VisionPortal visionPortal;
+    private final AprilTagProcessor aprilTag;
+    private final VisionPortal visionPortal;
 
     public VisionSystem(HardwareMap hw, Telemetry telemetry) {
         this.telemetry = telemetry;
-        // Create the AprilTag processor.
+
         aprilTag = new AprilTagProcessor.Builder()
-
-                // The following default settings are available to un-comment and edit as needed.
-                //.setDrawAxes(false)
-                //.setDrawCubeProjection(false)
-                //.setDrawTagOutline(true)
-                //.setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                //.setTagLibrary(AprilTagGameDatabase.getCenterStageTagLibrary())
-                //.setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
+                .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
                 .setCameraPose(cameraPosition, cameraOrientation)
-
-                // == CAMERA CALIBRATION ==
-                // If you do not manually specify calibration parameters, the SDK will attempt
-                // to load a predefined calibration for your camera.
-                //.setLensIntrinsics(578.272, 578.272, 402.145, 221.506)
-                // ... these parameters are fx, fy, cx, cy.
-
                 .build();
 
-        // Adjust Image Decimation to trade-off detection-range for detection-rate.
-        // eg: Some typical detection data using a Logitech C920 WebCam
-        // Decimation = 1 ..  Detect 2" Tag from 10 feet away at 10 Frames per second
-        // Decimation = 2 ..  Detect 2" Tag from 6  feet away at 22 Frames per second
-        // Decimation = 3 ..  Detect 2" Tag from 4  feet away at 30 Frames Per Second (default)
-        // Decimation = 3 ..  Detect 5" Tag from 10 feet away at 30 Frames Per Second (default)
-        // Note: Decimation can be changed on-the-fly to adapt during a match.
-        //aprilTag.setDecimation(3);
-
-        // Create the vision portal by using a builder.
         VisionPortal.Builder builder = new VisionPortal.Builder();
-
-        // Set the camera (webcam vs. built-in RC phone camera).
         builder.setCamera(hw.get(WebcamName.class, "Webcam 1"));
-
-        // Choose a camera resolution. Not all cameras support all resolutions.
-        //builder.setCameraResolution(new Size(640, 480));
-
-        // Enable the RC preview (LiveView).  Set "false" to omit camera monitoring.
-        //builder.enableLiveView(true);
-
-        // Set the stream format; MJPEG uses less bandwidth than default YUY2.
-        //builder.setStreamFormat(VisionPortal.StreamFormat.YUY2);
-
-        // Choose whether or not LiveView stops if no processors are enabled.
-        // If set "true", monitor shows solid orange screen if no processors enabled.
-        // If set "false", monitor shows camera view without annotations.
-        //builder.setAutoStopLiveView(false);
-
-        // Set and enable the processor.
         builder.addProcessor(aprilTag);
-
-        // Build the Vision Portal, using the above settings.
         visionPortal = builder.build();
+    }
 
-        // Disable or re-enable the aprilTag processor at any time.
-        //visionPortal.setProcessorEnabled(aprilTag, true);
+    public void reportTagIds() {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
 
-    }   // end method initAprilTag()
+        telemetry.addData("# AprilTags Detected", detections.size());
+        if (detections.isEmpty()) {
+            telemetry.addLine("No tags in view.");
+        } else {
+            for (AprilTagDetection d : detections) {
+                String name = (d.metadata != null && d.metadata.name != null) ? d.metadata.name : "Unknown";
+                telemetry.addData("Tag", String.format("ID %d  Name %s", d.id, name));
+            }
+        }
+        telemetry.update();
+    }
 
+    public void updateTelemetry() {
+        telemetryAprilTag();
+        telemetry.update();
+    }
 
-    /**
-     * Add telemetry about AprilTag detections.
-     */
+    public List<AprilTagDetection> getDetections() {
+        return aprilTag.getDetections();
+    }
+
+    public void close() {
+        if (visionPortal != null) {
+            visionPortal.close();
+        }
+    }
+
     private void telemetryAprilTag() {
-
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
         telemetry.addData("# AprilTags Detected", currentDetections.size());
 
-        // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
+            if (detection.metadata != null && detection.robotPose != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
                         detection.robotPose.getPosition().x,
@@ -120,14 +101,92 @@ public class VisionSystem {
                         detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)",
+                        detection.center.x, detection.center.y));
             }
-        }   // end for() loop
+        }
 
-        // Add "key" information to telemetry
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+    }
 
-    }   // end method telemetryAprilTag()
+    // =========================
+    // Obelisk helpers
+    // =========================
 
+    public enum ObeliskPattern {
+        ID21_0_1_1(21, new int[]{0, 1, 1}),
+        ID22_1_0_1(22, new int[]{1, 0, 1}),
+        ID23_1_1_0(23, new int[]{1, 1, 0}),
+        NONE(-1, null);
+
+        public final int tagId;
+        public final int[] order;
+
+        ObeliskPattern(int tagId, int[] order) {
+            this.tagId = tagId;
+            this.order = order;
+        }
+    }
+
+    public int getObeliskPattern() {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+        boolean seen21 = false, seen22 = false, seen23 = false;
+
+        for (AprilTagDetection d : detections) {
+            if (d.id == 21) seen21 = true;
+            else if (d.id == 22) seen22 = true;
+            else if (d.id == 23) seen23 = true;
+            return d.id;
+        }
+//
+//        if (seen21) return ObeliskPattern.ID21_0_1_1;
+//        if (seen22) return ObeliskPattern.ID22_1_0_1;
+//        if (seen23) return ObeliskPattern.ID23_1_1_0;
+//        return ObeliskPattern.NONE;
+        return 0;
+    }
+
+//    public int[] getObeliskOrder() {
+////        ObeliskPattern p = getObeliskPattern();
+//        return p.order; // null for NONE
+//
+//    }
+
+    // =========================
+    // Tag 20 shooting check
+    // =========================
+
+    private AprilTagDetection findDetectionById(int id) {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+        for (AprilTagDetection d : detections) {
+            if (d.id == id) return d;
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
+     * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
+     */
+    public boolean shootingCheck() {
+        AprilTagDetection tag20 = findDetectionById(20);
+
+        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
+//            telemetry.addLine("Tag 20 detected:");
+//            telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+//                    tag20.robotPose.getPosition().x,
+//                    tag20.robotPose.getPosition().y,
+//                    tag20.robotPose.getPosition().z));
+//            telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+//                    tag20.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
+//                    tag20.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
+//                    tag20.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
+//            telemetry.update();
+            return true;
+        }
+
+        // No telemetry on false, so caller can choose the message
+        return false;
+    }
 }

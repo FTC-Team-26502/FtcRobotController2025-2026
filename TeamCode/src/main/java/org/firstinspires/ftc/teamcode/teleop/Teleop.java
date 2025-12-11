@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 @TeleOp
 public class Teleop extends BaseCodeV2{
 
-    double Colors = LIGHTGREEN;
+
     @Override
     public void runOpMode() throws InterruptedException {
         initOpMode(true,true,true,true,true);
@@ -18,12 +18,15 @@ public class Teleop extends BaseCodeV2{
 
         while (opModeIsActive()) {
             odo.update();
+            shooting_okay();
+
+
 //            telemetryOdometryUpdate();
             if(gamepad1.a) {
                 intakeRun(1);
             } else if (gamepad1.b) {
                 intakeRun(0);
-            } else if (gamepad1.x) {
+            } else if (gamepad1.x && shooting_okay()) {
                 shoot();
             } else if (gamepad1.y) {
                 anglerLeft.setTargetPosition(0);
@@ -36,6 +39,30 @@ public class Teleop extends BaseCodeV2{
 //            telemetry.addData("Red: ", color.red());
 //            shooterLeft.setPower(0.5);
 //            shooterRight.setPower(0.5);
+            if (color.red() > 1500) {
+
+                for (int i = 0; i < 1; i++) {
+
+
+                    light.setPosition(LIGHTPURPLE);
+                    sleep(500);
+                    light.setPosition(0);
+
+                }
+
+            }
+
+            if (color.green()>2000) {
+
+                for (int i = 0; i < 1; i++) {
+
+                    light.setPosition(LIGHTGREEN);
+                    sleep(500);
+                    light.setPosition(0);
+
+
+                }
+            }
             telemetry.addData("Motor Current in amps (left): ", shooterLeft.getCurrent(CurrentUnit.AMPS));
             telemetry.addData("Motor Current in amps (right): ", shooterRight.getCurrent(CurrentUnit.AMPS));
             telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());

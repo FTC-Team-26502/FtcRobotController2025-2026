@@ -27,6 +27,11 @@ android {
 }
 
 repositories {
+    google() // add this
+    mavenCentral() // required for com.acmerobotics.dashboard
+// remove the placeholder custom repo unless you truly use it
+// mavenLocal() // optional
+// flatDir { dirs "libs" } // optional
     maven {
         url = 'https://maven.brott.dev/'
     }
