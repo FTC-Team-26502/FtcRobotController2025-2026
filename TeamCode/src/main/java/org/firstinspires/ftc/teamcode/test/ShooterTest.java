@@ -5,12 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 @TeleOp
-public class ShooterTest extends BaseCodeV2{
+public class ShooterTest extends BaseCodeV3{
 
     double Colors = LIGHTGREEN;
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode(true,true,true,true,true);
+        initOpMode(true,true,true,true,true, true);
         waitForStart();
         while (opModeIsActive()) {
             shooterLeft.setPower(1);

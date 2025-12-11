@@ -1,37 +1,31 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.teleop;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.BaseCodeV3;
 
-@TeleOp
-public class Teleop extends BaseCodeV2{
+public abstract class Teleop extends BaseCodeV3 {
 
+    abstract public void runOpMode() throws InterruptedException;
 
-    @Override
-    public void runOpMode() throws InterruptedException {
-        initOpMode(true,true,true,true,true);
+    public void runOpModeTeleop() throws InterruptedException {
         waitForStart();
-
         while (opModeIsActive()) {
-            odo.update();
-            shooting_okay();
 
-
-//            telemetryOdometryUpdate();
+            if (odo != null) {
+                odo.update();
+            }
+            double distance = shootingLightIndicator();
             if(gamepad1.a) {
-                intakeRun(1);
+                intake.startIntake();
             } else if (gamepad1.b) {
-                intakeRun(0);
+                intake.stopIntake();
             } else if (gamepad1.x && shooting_okay()) {
-                shoot();
+                shooter.setupShoot();
+                shooter.shoot();
             } else if (gamepad1.y) {
-                anglerLeft.setTargetPosition(0);
-                anglerRight.setTargetPosition(0);
-                stop_shooter();
+                shooter.stop();
             }
             driveSpeed(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 //            telemetry.addData("Green: ", color.green());

@@ -24,7 +24,7 @@ public class VisionSystem {
             DistanceUnit.INCH,
             0,   // X: right (+), left (-)
             0,   // Y: forward (+), back (-)
-            0,   // Z: up (+), down (-)
+            11.5/2+1,   // Z: up (+), down (-)
             0
     );
 
@@ -37,12 +37,14 @@ public class VisionSystem {
             0
     );
 
+    protected boolean blueAlliance;
+
     private final AprilTagProcessor aprilTag;
     private final VisionPortal visionPortal;
 
-    public VisionSystem(HardwareMap hw, Telemetry telemetry) {
+    public VisionSystem(HardwareMap hw, Telemetry telemetry, boolean blueAlliance) {
         this.telemetry = telemetry;
-
+        this.blueAlliance = blueAlliance;
         aprilTag = new AprilTagProcessor.Builder()
                 .setTagLibrary(AprilTagGameDatabase.getCurrentGameTagLibrary())
                 .setCameraPose(cameraPosition, cameraOrientation)
@@ -169,8 +171,9 @@ public class VisionSystem {
      * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
      * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
      */
-    public boolean shootingCheck() {
-        AprilTagDetection tag20 = findDetectionById(20);
+    public double shootingCheck() {
+        int tagID = blueAlliance?20:24;
+        AprilTagDetection tag20 = findDetectionById(tagID);
 
         if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
 //            telemetry.addLine("Tag 20 detected:");
@@ -183,10 +186,12 @@ public class VisionSystem {
 //                    tag20.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
 //                    tag20.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
 //            telemetry.update();
-            return true;
+            // distance to tag in meters
+            double dy = tag20.robotPose.getPosition().y/39.37007874;
+            return dy;
         }
 
         // No telemetry on false, so caller can choose the message
-        return false;
+        return -1.0;
     }
 }

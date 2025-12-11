@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-public class LightTest extends BaseCodeV2{
+public class LightTest extends BaseCodeV3{
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode(true, true, false, false, true);
+        initOpMode(true, true, false, false, true, true);
         waitForStart();
         while (opModeIsActive()) {
             light.setPosition(LIGHTGREEN);

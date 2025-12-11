@@ -1,7 +1,4 @@
-package org.firstinspires.ftc.teamcode;
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+package org.firstinspires.ftc.teamcode.auto;
 
 import androidx.annotation.NonNull;
 
@@ -15,17 +12,17 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.BaseCodeV3;
+import org.firstinspires.ftc.teamcode.MecanumDrive;
+
 /**
  * First version of autonomous code for Decode.
  * Author: dorinamevans@gmail.com
  */
 @Autonomous(name = "AutoOne", group = "Autonomous")
-public class AutoPPG extends BaseCodeV3 {
+public abstract class Auto extends BaseCodeV3 {
 
-    @Override
-    public void runOpMode() throws InterruptedException {
-        // Initialize robot hardware and subsystems
-        initRobot(true, true, true, true, true);
+    public void runOpModeAuto() throws InterruptedException {
 
         // Define start pose (units must match your RR config; inches are common)
         Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
@@ -101,7 +98,7 @@ public class AutoPPG extends BaseCodeV3 {
                         closeOut2,
 
                         // Intake actions; ensure these return Action
-                        intake.startIntake(),
+                        intake.startIntakeAction(),
                         new Action() {
                             @Override
                             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
@@ -110,12 +107,12 @@ public class AutoPPG extends BaseCodeV3 {
                             }
                         },
                         new SleepAction(0.500),
-                        intake.stopIntake(),
+                        intake.stopIntakeAction(),
                         new SleepAction(0.500),
                         traj3,
                         closeOut3,
                         new SleepAction(1.000),
-                        intake.startIntake(),
+                        intake.startIntakeAction(),
                         new SleepAction(4.000),
 
                         shooter.stop(),

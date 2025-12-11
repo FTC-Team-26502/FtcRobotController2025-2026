@@ -15,10 +15,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 @TeleOp
-public class ColorSensorTest extends BaseCodeV2{
+public class ColorSensorTest extends BaseCodeV3{
     @Override
     public void runOpMode() throws InterruptedException {
-        initOpMode(true, true, false, false, true);
+        initOpMode(true, true, false, false, true, true);
         waitForStart();
         while (opModeIsActive()) {
             } if(color.green()>2000){

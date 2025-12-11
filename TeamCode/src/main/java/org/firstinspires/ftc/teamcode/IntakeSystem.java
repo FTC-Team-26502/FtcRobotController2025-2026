@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-class IntakeSystem {
+public class IntakeSystem {
 
     private final CRServo fl, fr, ml, mr;
     private final Telemetry telemetry;
@@ -27,31 +27,36 @@ class IntakeSystem {
         telemetry.addLine("Intake initialized");
     }
 
+    public void stopIntake() {
+        fl.setPower(0);
+        fr.setPower(0);
+        ml.setPower(0);
+        mr.setPower(0);
+    }
 
-    public Action stopIntake(){
+
+    public Action stopIntakeAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                fl.setPower(0);
-                fr.setPower(0);
-                ml.setPower(0);
-                mr.setPower(0);
+                stopIntake();
                 return false;
             }
         };
     }
 
-    public Action startIntake(){
+    public void startIntake() {
+        fl.setPower(1);
+        fr.setPower(1);
+        ml.setPower(1);
+        mr.setPower(1);
+    }
+
+    public Action startIntakeAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                telemetry.addLine("Intake Start");
-                fl.setPower(1);
-                fr.setPower(1);
-                ml.setPower(1);
-                mr.setPower(1);
-                telemetry.addLine("Intake Started");
-                telemetry.update();
+                startIntake();
                 return false;
             }
         };

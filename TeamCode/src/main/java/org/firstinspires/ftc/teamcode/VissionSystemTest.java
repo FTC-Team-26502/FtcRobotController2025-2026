@@ -4,29 +4,28 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp(name = "Vision ShootingCheck Test", group = "Test")
-public class VissionSystemTest extends BaseCodeV2 {
+public class VissionSystemTest extends BaseCodeV3 {
 
     private VisionSystem vision;
 
     @Override
     public void runOpMode()  {
-        vision = new VisionSystem(hardwareMap, telemetry);
+        vision = new VisionSystem(hardwareMap, telemetry, true);
 
         telemetry.addLine("Vision initialized. Press START.");
         telemetry.update();
 
-        initOpMode(false, false, true, false, true);
+        initOpMode(false, false, true, false, true, true);
         waitForStart();
 
         while (opModeIsActive() && !isStopRequested()) {
 
-            boolean canShoot = vision.shootingCheck(); // prints pose if true
+            double canShoot = vision.shootingCheck(); // prints pose if true
 
-            if (!canShoot) {
+            if (canShoot<0) {
                 telemetry.addLine("CAN'T SHOOT");
                 telemetry.update();
                 light.setPosition(LIGHTRED);
-
             } else {
                 light.setPosition(LIGHTGREEN);
             }

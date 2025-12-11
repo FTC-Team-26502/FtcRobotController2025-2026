@@ -53,6 +53,7 @@ import java.util.List;
 
 @Config
 public final class MecanumDrive {
+
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
@@ -257,7 +258,8 @@ public final class MecanumDrive {
     }
 
     public void setDrivePowers(PoseVelocity2d powers) {
-        MecanumKinematics.WheelVelocities<Time> wheelVels = new MecanumKinematics(1).inverse(
+        MecanumKinematics.WheelVelocities<Time> wheelVels = new
+                MecanumKinematics(1).inverse(
                 PoseVelocity2dDual.constant(powers, 1));
 
         double maxPowerMag = 1;
@@ -269,6 +271,33 @@ public final class MecanumDrive {
         leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
         rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
         rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag * FRONT_SCALE);
+    }
+
+    public void driveSpeed(double xPower, double yPower, double turnPower) {
+        // TODO use kinematics
+        double DRIVE_SPEED_SCALE_DOWN = 11;
+        double MIN_SPEED_DRIVE = 0.2;
+        // Scale down
+        xPower *= DRIVE_SPEED_SCALE_DOWN;
+        yPower *= DRIVE_SPEED_SCALE_DOWN;
+        turnPower *= DRIVE_SPEED_SCALE_DOWN;
+
+        // Deadzones on absolute value
+        if (Math.abs(xPower) < MIN_SPEED_DRIVE) xPower = 0;
+        if (Math.abs(yPower) < MIN_SPEED_DRIVE) yPower = 0;
+        if (Math.abs(turnPower) < MIN_SPEED_DRIVE) turnPower = 0;
+
+        // Mecanum mix (robot-centric)
+        double lf = yPower + xPower - turnPower;
+        double lb = yPower - xPower - turnPower;
+        double rb = yPower + xPower + turnPower;
+        double rf = yPower - xPower + turnPower;
+
+        //Set motor powers
+        leftFront.setPower(lf);
+        leftBack.setPower(lb);
+        rightBack.setPower(rb);
+        rightFront.setPower(rf);
     }
 
     public final class FollowTrajectoryAction implements Action {

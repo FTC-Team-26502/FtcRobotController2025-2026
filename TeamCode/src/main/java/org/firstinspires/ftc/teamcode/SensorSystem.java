@@ -20,15 +20,18 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
-import java.util.Locale;
-import java.util.Map;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class SensorSystem {
 
-    final Servo light;
-    final ColorSensor color;
-    protected DistanceSensor fl;
-    protected DistanceSensor fr;
+    protected final Servo light;
+    protected final ColorSensor color;
+    protected final DistanceSensor fl;
+    protected final DistanceSensor fr;
+    protected final IMU shooterIMU;
     protected static final double LIGHTRED = 0.3;
     protected static final double LIGHTYELLOW = 0.388;
     protected static final double LIGHTGREEN = 0.477;
@@ -40,8 +43,24 @@ public class SensorSystem {
         color = hw.get(ColorSensor.class, "color");
         fl = hw.get(DistanceSensor.class, "flDistance");
         fr = hw.get(DistanceSensor.class, "frDistance");
+        shooterIMU = hw.get(IMU.class, "shooterIMU");
+
+        // Set how the IMU is mounted on the robot. Update these to match your physical mounting.
+        RevHubOrientationOnRobot.LogoFacingDirection logoDir =
+                RevHubOrientationOnRobot.LogoFacingDirection.DOWN;      // change as needed
+        RevHubOrientationOnRobot.UsbFacingDirection usbDir =
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;  // change as needed
+        IMU.Parameters params = new IMU.Parameters(
+                new RevHubOrientationOnRobot(logoDir, usbDir));
+        shooterIMU.initialize(params);
         light.setPosition(0.2);
     }
+
+    public boolean setLight(double lightValue) {
+        light.setPosition(lightValue);
+        return false;
+    }
+
     public Action buildShootingAction() {
         return new SequentialAction();
     }

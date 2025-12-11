@@ -112,5 +112,13 @@ public class ShooterSystem {
         return (d * Math.sqrt(GRAVITY / (d - DELTA_Y))) / SPEED_MULTIPLIER;
     }
 
+    public double calculateShootingSpeed(double d){
+        double speed = (d * Math.sqrt(GRAVITY/(d-DELTA_Y)))/12;
+        telemetry.addData("D", d);
+        telemetry.addData("SPEED", speed);
+        telemetry.update();
+        return speed;
+    }
+
 }
 
