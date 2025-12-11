@@ -134,11 +134,11 @@ public class VisionSystem {
     public int getObeliskPattern() {
         List<AprilTagDetection> detections = aprilTag.getDetections();
         boolean seen21 = false, seen22 = false, seen23 = false;
-
+        int dist = 0;
         for (AprilTagDetection d : detections) {
-            if (d.id == 21) seen21 = true;
-            else if (d.id == 22) seen22 = true;
-            else if (d.id == 23) seen23 = true;
+            if (d.id == 21) dist = 1;
+            else if (d.id == 22) dist = 2;
+            else if (d.id == 23) dist = 3;
             return d.id;
         }
 //
@@ -146,7 +146,7 @@ public class VisionSystem {
 //        if (seen22) return ObeliskPattern.ID22_1_0_1;
 //        if (seen23) return ObeliskPattern.ID23_1_1_0;
 //        return ObeliskPattern.NONE;
-        return 0;
+        return dist;
     }
 
 //    public int[] getObeliskOrder() {
@@ -174,21 +174,24 @@ public class VisionSystem {
     public boolean shootingCheck() {
         int tagID = blueAlliance?20:24;
         AprilTagDetection tag20 = findDetectionById(tagID);
-
         if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
+            telemetry.addData("corner0", tag20.corners[0].x);
+            telemetry.addData("corner1", tag20.corners[1].x);
+            telemetry.addData("corner2", tag20.corners[2].x);
+            telemetry.addData("corner3", tag20.corners[3].x);
 //            telemetry.addLine("Tag 20 detected:");
-//            telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+//            telemetry.addLine(String.format("XYZ %6.1f %6.1f6.1f  (inch)",
 //                    tag20.robotPose.getPosition().x,
 //                    tag20.robotPose.getPosition().y,
 //                    tag20.robotPose.getPosition().z));
-//            telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
-//                    tag20.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
+//            telemetry.addLine(String.format("PRY %6.1f %6.1f6.1f  (deg)",
+//                    tag20.robotPose.getOrientation().getPitcAngleUnit.DEGREES),
 //                    tag20.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
 //                    tag20.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
 //            telemetry.update();
             // distance to tag in meters
             double dy = tag20.robotPose.getPosition().y/39.37007874;
-            return (dy>0);
+            return true;
         }
 
         // No telemetry on false, so caller can choose the message

@@ -23,12 +23,13 @@ public abstract class Teleop extends BaseCodeV3 {
                 intake.stopIntake();
             } else if (gamepad1.x && vision.shootingCheck()) {
                 shooter.setupShoot();
+                sleep(1000); //rplace with wait for speed and position
                 shooter.shoot();
                 telemetry.addLine("shooting");
             } else if (gamepad1.y) {
                 shooter.stop();
             }
-            drive.driveSpeed(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            drive.driveSpeed(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x);
 //            telemetry.addData("Green: ", color.green());
 //            telemetry.addData("Blue: ", color.blue());
 //            telemetry.addData("Red: ", color.red());

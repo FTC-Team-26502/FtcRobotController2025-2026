@@ -19,9 +19,9 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  * First version of autonomous code for Decode.
  * Author: dorinamevans@gmail.com
  */
-@Autonomous(name = "AutoOne", group = "Autonomous")
 public abstract class Auto extends BaseCodeV3 {
-
+    int ballDistMultipliers;
+    int yForBall;
     public void runOpModeAuto() throws InterruptedException {
 
         // Define start pose (units must match your RR config; inches are common)
@@ -47,9 +47,11 @@ public abstract class Auto extends BaseCodeV3 {
 
         Action closeOut3 = tab3.endTrajectory().fresh().build();
 
+        ballDistMultipliers = vision.getObeliskPattern();
+        yForBall = 25-ballDistMultipliers*24;
         TrajectoryActionBuilder tab4 = tab3.endTrajectory().fresh()
                 .turnTo(Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(-65, 25), Math.toRadians(180));
+                .splineToConstantHeading(new Vector2d(-65, yForBall), Math.toRadians(180));
         Action closeOut4 = tab4.endTrajectory().fresh().build();
         TrajectoryActionBuilder tab5 = tab4.endTrajectory().fresh()
                 .splineToConstantHeading(new Vector2d(-12, 12), Math.toRadians(180))
@@ -81,7 +83,7 @@ public abstract class Auto extends BaseCodeV3 {
                             }
                         },
                         // Example shooter action; ensure shoot() returns Action
-                        shooter.setupShoot(),
+                        shooter.setupShootAction(),
                         new Action() {
                             @Override
                             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
@@ -92,7 +94,7 @@ public abstract class Auto extends BaseCodeV3 {
                         },
                         // Sleep actions; ensure sleepAction returns Action
                         new SleepAction(0.5),
-                        shooter.shoot(),
+                        shooter.shootAction(),
                         new SleepAction(1),
                         traj2,
                         closeOut2,
@@ -115,7 +117,7 @@ public abstract class Auto extends BaseCodeV3 {
                         intake.startIntakeAction(),
                         new SleepAction(4.000),
 
-                        shooter.stop(),
+                        shooter.stopAction(),
 //
                         traj4,
                         closeOut4,
@@ -123,7 +125,7 @@ public abstract class Auto extends BaseCodeV3 {
                         traj5,
                         closeOut5,
                         // Example shooter action; ensure shoot() returns Action
-                        shooter.setupShoot(),
+                        shooter.setupShootAction(),
                         new Action() {
                             @Override
                             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
@@ -132,11 +134,11 @@ public abstract class Auto extends BaseCodeV3 {
                                 return false;
                             }
                         },
-                        // Sleep actions; ensure sleepAction returns Action
+                        // Sleep actions; ensure sl         eepAction returns Action
                         new SleepAction(1),
-                        shooter.shoot(),
+                        shooter.shootAction(),
                         new SleepAction(1),
-                        shooter.stop()
+                        shooter.stopAction()
 //
 //
 //                        // Final shot
