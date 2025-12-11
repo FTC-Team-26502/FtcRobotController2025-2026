@@ -47,9 +47,9 @@ public abstract class BaseCodeV3 extends LinearOpMode {
         telemetry.update();
     }
 
-    public double shootingLightIndicator() {
-        double  canShoot = vision.shootingCheck();
-        if(canShoot<0) {
+    public boolean shootingLightIndicator() {
+        boolean  canShoot = vision.shootingCheck();
+        if(!canShoot) {
             sensors.setLight(SensorSystem.LIGHTRED);
         } else {
             sensors.setLight(SensorSystem.LIGHTBLUE);

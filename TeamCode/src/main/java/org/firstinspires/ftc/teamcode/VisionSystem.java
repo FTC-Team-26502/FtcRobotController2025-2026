@@ -171,7 +171,7 @@ public class VisionSystem {
      * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
      * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
      */
-    public double shootingCheck() {
+    public boolean shootingCheck() {
         int tagID = blueAlliance?20:24;
         AprilTagDetection tag20 = findDetectionById(tagID);
 
@@ -188,10 +188,10 @@ public class VisionSystem {
 //            telemetry.update();
             // distance to tag in meters
             double dy = tag20.robotPose.getPosition().y/39.37007874;
-            return dy;
+            return (dy>0);
         }
 
         // No telemetry on false, so caller can choose the message
-        return -1.0;
+        return false;
     }
 }

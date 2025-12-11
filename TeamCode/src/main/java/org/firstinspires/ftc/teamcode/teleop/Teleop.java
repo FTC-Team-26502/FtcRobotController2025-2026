@@ -16,51 +16,52 @@ public abstract class Teleop extends BaseCodeV3 {
             if (odo != null) {
                 odo.update();
             }
-            double distance = shootingLightIndicator();
+            boolean canShoot = shootingLightIndicator();
             if(gamepad1.a) {
                 intake.startIntake();
             } else if (gamepad1.b) {
                 intake.stopIntake();
-            } else if (gamepad1.x && shooting_okay()) {
+            } else if (gamepad1.x && vision.shootingCheck()) {
                 shooter.setupShoot();
                 shooter.shoot();
+                telemetry.addLine("shooting");
             } else if (gamepad1.y) {
                 shooter.stop();
             }
-            driveSpeed(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
+            drive.driveSpeed(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 //            telemetry.addData("Green: ", color.green());
 //            telemetry.addData("Blue: ", color.blue());
 //            telemetry.addData("Red: ", color.red());
 //            shooterLeft.setPower(0.5);
 //            shooterRight.setPower(0.5);
-            if (color.red() > 1500) {
+            if (sensors.getColorRed() > 1500) {
 
                 for (int i = 0; i < 1; i++) {
 
 
-                    light.setPosition(LIGHTPURPLE);
+                    sensors.setLight(sensors.LIGHTPURPLE);
                     sleep(500);
-                    light.setPosition(0);
+                    sensors.setLight(0);
 
                 }
 
             }
 
-            if (color.green()>2000) {
+            if (sensors.getColorGreen()>2000) {
 
                 for (int i = 0; i < 1; i++) {
 
-                    light.setPosition(LIGHTGREEN);
+                    sensors.setLight(sensors.LIGHTGREEN);
                     sleep(500);
-                    light.setPosition(0);
+                    sensors.setLight(0);
 
 
                 }
             }
-            telemetry.addData("Motor Current in amps (left): ", shooterLeft.getCurrent(CurrentUnit.AMPS));
-            telemetry.addData("Motor Current in amps (right): ", shooterRight.getCurrent(CurrentUnit.AMPS));
-            telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
-            telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
+//            telemetry.addData("Motor Current in amps (left): ", shooterLeft.getCurrent(CurrentUnit.AMPS));
+//            telemetry.addData("Motor Current in amps (right): ", shooterRight.getCurrent(CurrentUnit.AMPS));
+//            telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
+//            telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
             telemetry.update();
         }
     }

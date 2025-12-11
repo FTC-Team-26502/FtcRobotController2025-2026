@@ -32,11 +32,11 @@ public class SensorSystem {
     protected final DistanceSensor fl;
     protected final DistanceSensor fr;
     protected final IMU shooterIMU;
-    protected static final double LIGHTRED = 0.3;
-    protected static final double LIGHTYELLOW = 0.388;
-    protected static final double LIGHTGREEN = 0.477;
-    protected static final double LIGHTBLUE = 0.611;
-    protected static final double LIGHTPURPLE = 0.722;
+    public static final double LIGHTRED = 0.3;
+    public static final double LIGHTYELLOW = 0.388;
+    public static final double LIGHTGREEN = 0.477;
+    public static final double LIGHTBLUE = 0.611;
+    public static final double LIGHTPURPLE = 0.722;
 
     SensorSystem(HardwareMap hw, Telemetry telemetry) {
         light = hw.get(Servo.class, "light");
@@ -53,13 +53,21 @@ public class SensorSystem {
         IMU.Parameters params = new IMU.Parameters(
                 new RevHubOrientationOnRobot(logoDir, usbDir));
         shooterIMU.initialize(params);
-        light.setPosition(0.2);
+        light.setPosition(0);
     }
 
     public boolean setLight(double lightValue) {
         light.setPosition(lightValue);
         return false;
     }
+
+    public int getColorRed() {
+        return color.red();
+    }
+    public int getColorGreen() {
+        return color.green();
+    }
+
 
     public Action buildShootingAction() {
         return new SequentialAction();
