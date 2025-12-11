@@ -56,32 +56,39 @@ public class ShooterSystem {
         this.telemetry = telemetry;
     }
 
-    public Action setupShoot() {
+    public void setupShoot() {
+        double speed = calcSpeed();
+        shooterLeft.setPower(speed);
+        shooterRight.setPower(speed);
+        int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE_OF_SHOOTER);
+        anglerLeft.setPower(ANGLER_SPEED);
+        anglerRight.setPower(ANGLER_SPEED);
+        anglerLeft.setTargetPosition(ticks);
+        anglerRight.setTargetPosition(ticks);
+    }
+
+    public Action setupShootAction() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet){
-                double speed = calcSpeed();
-                shooterLeft.setPower(speed);
-                shooterRight.setPower(speed);
-                int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE_OF_SHOOTER);
-                anglerLeft.setPower(ANGLER_SPEED);
-                anglerRight.setPower(ANGLER_SPEED);
-                anglerLeft.setTargetPosition(ticks);
-                anglerRight.setTargetPosition(ticks);
+                setupShoot();
                 telemetry.addLine("Shooting setup done");
                 telemetry.update();
                 return false;
             }
         };
-
     }
 
-    public Action shoot(){
+    public void shoot() {
+        bl.setPower(1);
+        br.setPower(1);
+    }
+
+    public Action shootAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                bl.setPower(1);
-                br.setPower(1);
+                shoot();
                 telemetry.addLine("Shooting");
                 telemetry.update();
                 return false;
@@ -89,17 +96,21 @@ public class ShooterSystem {
         };
     }
 
-    public Action stop(){
+    public void stop() {
+        shooterLeft.setPower(0);
+        shooterRight.setPower(0);
+        anglerLeft.setPower(0);
+        anglerRight.setPower(0);
+        br.setPower(0);
+        bl.setPower(0);
+    }
+
+    public Action stopAction(){
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                shooterLeft.setPower(0);
-                shooterRight.setPower(0);
-                anglerLeft.setPower(0);
-                anglerRight.setPower(0);
-                br.setPower(0);
-                bl.setPower(0);
+                stop();
                 telemetry.addLine("Shooting stopped");
                 telemetry.update();
                 return false;
