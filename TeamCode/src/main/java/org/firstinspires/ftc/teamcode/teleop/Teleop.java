@@ -16,12 +16,12 @@ public abstract class Teleop extends BaseCodeV3 {
             if (odo != null) {
                 odo.update();
             }
-            boolean canShoot = shootingLightIndicator();
+             shootingLightIndicator();
             if(gamepad1.a) {
                 intake.startIntake();
             } else if (gamepad1.b) {
                 intake.stopIntake();
-            } else if (gamepad1.x && vision.shootingCheck()) {
+            } else if (gamepad1.x && vision.checkShootPoosible()) {
                 shooter.setupShoot();
                 sleep(1000); //rplace with wait for speed and position
                 shooter.shoot();

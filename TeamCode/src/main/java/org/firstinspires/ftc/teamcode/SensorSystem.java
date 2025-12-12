@@ -31,7 +31,7 @@ public class SensorSystem {
     protected final ColorSensor color;
     protected final DistanceSensor fl;
     protected final DistanceSensor fr;
-    protected final IMU shooterIMU;
+
     public static final double LIGHTRED = 0.3;
     public static final double LIGHTYELLOW = 0.388;
     public static final double LIGHTGREEN = 0.477;
@@ -43,16 +43,6 @@ public class SensorSystem {
         color = hw.get(ColorSensor.class, "color");
         fl = hw.get(DistanceSensor.class, "flDistance");
         fr = hw.get(DistanceSensor.class, "frDistance");
-        shooterIMU = hw.get(IMU.class, "shooterIMU");
-
-        // Set how the IMU is mounted on the robot. Update these to match your physical mounting.
-        RevHubOrientationOnRobot.LogoFacingDirection logoDir =
-                RevHubOrientationOnRobot.LogoFacingDirection.DOWN;      // change as needed
-        RevHubOrientationOnRobot.UsbFacingDirection usbDir =
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;  // change as needed
-        IMU.Parameters params = new IMU.Parameters(
-                new RevHubOrientationOnRobot(logoDir, usbDir));
-        shooterIMU.initialize(params);
         light.setPosition(0);
     }
 

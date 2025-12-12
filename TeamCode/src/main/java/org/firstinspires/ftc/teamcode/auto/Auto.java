@@ -138,11 +138,11 @@ public abstract class Auto extends BaseCodeV3 {
 
                         shooter.stopAction(),
 //
-                        traj4,
-                        closeOut4,
-                        new SleepAction(0.500),
-                        traj5,
-                        closeOut5,
+//                        traj4,
+//                        closeOut4,
+//                        new SleepAction(0.500),
+//                        traj5,
+//                        closeOut5,
                         // Example shooter action; ensure shoot() returns Action
                         shooter.setupShootAction(),
                         new Action() {

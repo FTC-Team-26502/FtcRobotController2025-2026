@@ -25,13 +25,18 @@ public abstract class BaseCodeV3 extends LinearOpMode {
             Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
             drive = new MecanumDrive(hardwareMap, startPose);
         }
-        if (useShooter) shooter = new ShooterSystem(hardwareMap, telemetry);
+
         if (useIntake) intake = new IntakeSystem(hardwareMap, telemetry);
         if (useSensors) {
             sensors = new SensorSystem(hardwareMap, telemetry);
             sensors.setLight(SensorSystem.LIGHTRED);
         }
-        if (useVision) vision = new VisionSystem(hardwareMap, telemetry, blueAlliance);
+        if (useVision || useShooter) {
+            vision = new VisionSystem(hardwareMap, telemetry, blueAlliance);
+        }
+        if (useShooter ) {
+            shooter = new ShooterSystem(hardwareMap, telemetry, vision);
+        }
         //Init odometry
         if(useOdo) {
             odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
@@ -48,7 +53,7 @@ public abstract class BaseCodeV3 extends LinearOpMode {
     }
 
     public boolean shootingLightIndicator() {
-        boolean  canShoot = vision.shootingCheck();
+        boolean  canShoot = vision.checkShootPoosible();
         if(!canShoot) {
             sensors.setLight(SensorSystem.LIGHTRED);
         } else {

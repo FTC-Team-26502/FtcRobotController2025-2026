@@ -17,6 +17,8 @@ import java.util.List;
 
 public class VisionSystem {
 
+    public static final double DELTA_Y = 0.9;
+
     private final Telemetry telemetry;
 
     // Set this to your actual camera mount relative to the robot center
@@ -167,34 +169,43 @@ public class VisionSystem {
         return null;
     }
 
+    public AprilTagDetection checkTag() {
+        int tagID = blueAlliance ? 20 : 24;
+        AprilTagDetection tag20 = findDetectionById(tagID);
+        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
+            return tag20;
+        }
+        return null;
+    }
+
+    public double distanceToTarget() {
+        AprilTagDetection tag = checkTag();
+        if ( tag == null ) {
+            return -1.0;
+        }
+        return tag.robotPose.getPosition().y; // /39.37007874;
+
+    }
+
+
     /**
      * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
      * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
      */
-    public boolean shootingCheck() {
-        int tagID = blueAlliance?20:24;
-        AprilTagDetection tag20 = findDetectionById(tagID);
-        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
-            telemetry.addData("corner0", tag20.corners[0].x);
-            telemetry.addData("corner1", tag20.corners[1].x);
-            telemetry.addData("corner2", tag20.corners[2].x);
-            telemetry.addData("corner3", tag20.corners[3].x);
-//            telemetry.addLine("Tag 20 detected:");
-//            telemetry.addLine(String.format("XYZ %6.1f %6.1f6.1f  (inch)",
-//                    tag20.robotPose.getPosition().x,
-//                    tag20.robotPose.getPosition().y,
-//                    tag20.robotPose.getPosition().z));
-//            telemetry.addLine(String.format("PRY %6.1f %6.1f6.1f  (deg)",
-//                    tag20.robotPose.getOrientation().getPitcAngleUnit.DEGREES),
-//                    tag20.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
-//                    tag20.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
-//            telemetry.update();
-            // distance to tag in meters
-            double dy = tag20.robotPose.getPosition().y/39.37007874;
-            return true;
+    public boolean checkShootPoosible() {
+        AprilTagDetection tag = checkTag();
+        if ( tag == null ) {
+            return false;
         }
-
-        // No telemetry on false, so caller can choose the message
-        return false;
+        telemetry.addLine("Got April tag");
+        double targetDistance = tag.robotPose.getPosition().y; // /39.37007874;
+        telemetry.addLine(String.format("Distance to target %s", targetDistance));
+        double minShootingAngle = Math.atan(DELTA_Y / targetDistance);
+        telemetry.addLine(String.format("min shooting angle %s", minShootingAngle));
+        if ( minShootingAngle > Math.toRadians(55) ) {
+            return false;
+        }
+        return true;
     }
+
 }
