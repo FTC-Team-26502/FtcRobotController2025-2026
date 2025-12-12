@@ -10,7 +10,6 @@ import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.BaseCodeV3;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -48,21 +47,41 @@ public abstract class Auto extends BaseCodeV3 {
         Action closeOut3 = tab3.endTrajectory().fresh().build();
 
         ballDistMultipliers = vision.getObeliskPattern();
-        yForBall = 25-ballDistMultipliers*24;
-        TrajectoryActionBuilder tab4 = tab3.endTrajectory().fresh()
+        telemetry.addData("distmultiplyer", ballDistMultipliers);
+        TrajectoryActionBuilder ppg = tab3.endTrajectory().fresh()
                 .turnTo(Math.toRadians(180))
-                .splineToConstantHeading(new Vector2d(-65, yForBall), Math.toRadians(180));
-        Action closeOut4 = tab4.endTrajectory().fresh().build();
-        TrajectoryActionBuilder tab5 = tab4.endTrajectory().fresh()
-                .splineToConstantHeading(new Vector2d(-12, 12), Math.toRadians(180))
+                .splineToConstantHeading(new Vector2d(-65, 12), Math.toRadians(180));
+        Action closeOut4ppg = ppg.endTrajectory().fresh().build();
+        TrajectoryActionBuilder pgp = tab3.endTrajectory().fresh()
+                .turnTo(Math.toRadians(180))
+                .splineToConstantHeading(new Vector2d(-65, -12), Math.toRadians(180));
+        Action closeOut4pgp = pgp.endTrajectory().fresh().build();
+        TrajectoryActionBuilder gpp = tab3.endTrajectory().fresh()
+                .turnTo(Math.toRadians(180))
+                .splineToConstantHeading(new Vector2d(-65, -36), Math.toRadians(180));
+        Action closeOut4gpp = gpp.endTrajectory().fresh().build();
+        TrajectoryActionBuilder tab5gpp = gpp.endTrajectory().fresh()
+                .splineToConstantHeading(new Vector2d(-20, 20), Math.toRadians(180))
                 .turnTo(Math.toRadians(-40));
-        Action closeOut5 = tab5.endTrajectory().fresh().build();
+        Action closeOut5gpp = tab5gpp.endTrajectory().fresh().build();
+        TrajectoryActionBuilder tab5pgp = pgp.endTrajectory().fresh()
+                .splineToConstantHeading(new Vector2d(-20, 20), Math.toRadians(180))
+                .turnTo(Math.toRadians(-40));
+        Action closeOut5pgp = tab5pgp.endTrajectory().fresh().build();
+        TrajectoryActionBuilder tab5ppg = ppg.endTrajectory().fresh()
+                .splineToConstantHeading(new Vector2d(-20, 20), Math.toRadians(180))
+                .turnTo(Math.toRadians(-40));
+        Action closeOut5ppg = tab5pgp.endTrajectory().fresh().build();
         // Build the trajectory actions
         Action traj1 = tab1.build();
         Action traj2 = tab2.build();
-        Action traj3 = tab3.build();;
-        Action traj4 = tab4.build();
-        Action traj5 = tab5.build();
+        Action traj3 = tab3.build();
+        Action traj4gpp = gpp.build();
+        Action traj4ppg = ppg.build();
+        Action traj4pgp = pgp.build();
+        Action traj5gpp = tab5gpp.build();
+        Action traj5ppg = tab5ppg.build();
+        Action traj5pgp = tab5pgp.build();
 
         // Wait for the start command
         waitForStart();
@@ -93,7 +112,7 @@ public abstract class Auto extends BaseCodeV3 {
                             }
                         },
                         // Sleep actions; ensure sleepAction returns Action
-                        new SleepAction(0.5),
+                        new SleepAction(1),
                         shooter.shootAction(),
                         new SleepAction(1),
                         traj2,
