@@ -92,26 +92,8 @@ public abstract class Auto extends BaseCodeV3 {
                 new SequentialAction(
                         traj1,
                         closeOut1,
-
-                        new Action() {
-                            @Override
-                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                                telemetry.addLine("Before shoot");
-                                telemetry.update();
-                                return false;
-                            }
-                        },
-                        // Example shooter action; ensure shoot() returns Action
-                        shooter.setupShootAction(),
-                        new Action() {
-                            @Override
-                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                                telemetry.addLine("Done shoot");
-                                telemetry.update();
-                                return false;
-                            }
-                        },
-                        // Sleep actions; ensure sleepAction returns Action
+                        shooter.setupFlywheelAction(),
+                        shooter.setupAnglerAction(),
                         new SleepAction(1),
                         shooter.shootAction(),
                         new SleepAction(1),
@@ -144,7 +126,8 @@ public abstract class Auto extends BaseCodeV3 {
 //                        traj5,
 //                        closeOut5,
                         // Example shooter action; ensure shoot() returns Action
-                        shooter.setupShootAction(),
+                        shooter.setupFlywheelAction(),
+                        shooter.setupAnglerAction(),
                         new Action() {
                             @Override
                             public boolean run(@NonNull TelemetryPacket telemetryPacket) {

@@ -123,100 +123,6 @@ public final class MecanumDrive {
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
 
-    public class DriveLocalizer implements Localizer {
-        public final Encoder leftFront, leftBack, rightBack, rightFront;
-        public final IMU imu;
-
-        private int lastLeftFrontPos, lastLeftBackPos, lastRightBackPos, lastRightFrontPos;
-        private Rotation2d lastHeading;
-        private boolean initialized;
-        private Pose2d pose;
-        public DriveLocalizer(Pose2d pose) {
-            leftFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftFront));
-            leftBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftBack));
-            rightBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightBack));
-            rightFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightFront));
-
-            imu = lazyImu.get();
-
-            // TODO: reverse encoders if needed
-            //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-
-            this.pose = pose;
-        }
-
-        @Override
-        public void setPose(Pose2d pose) {
-            this.pose = pose;
-        }
-
-        @Override
-        public Pose2d getPose() {
-            return pose;
-        }
-
-        @Override
-        public PoseVelocity2d update() {
-            PositionVelocityPair leftFrontPosVel = leftFront.getPositionAndVelocity();
-            PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
-            PositionVelocityPair rightBackPosVel = rightBack.getPositionAndVelocity();
-            PositionVelocityPair rightFrontPosVel = rightFront.getPositionAndVelocity();
-
-            YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
-
-            FlightRecorder.write("MECANUM_LOCALIZER_INPUTS", new MecanumLocalizerInputsMessage(
-                    leftFrontPosVel, leftBackPosVel, rightBackPosVel, rightFrontPosVel, angles));
-
-            Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
-
-            if (!initialized) {
-                initialized = true;
-
-                lastLeftFrontPos = leftFrontPosVel.position;
-                lastLeftBackPos = leftBackPosVel.position;
-                lastRightBackPos = rightBackPosVel.position;
-                lastRightFrontPos = rightFrontPosVel.position;
-
-                lastHeading = heading;
-
-                return new PoseVelocity2d(new Vector2d(0.0, 0.0), 0.0);
-            }
-
-            double headingDelta = heading.minus(lastHeading);
-            Twist2dDual<Time> twist = kinematics.forward(new MecanumKinematics.WheelIncrements<>(
-                    new DualNum<Time>(new double[]{
-                            (leftFrontPosVel.position - lastLeftFrontPos),
-                            leftFrontPosVel.velocity,
-                    }).times(PARAMS.inPerTick),
-                    new DualNum<Time>(new double[]{
-                            (leftBackPosVel.position - lastLeftBackPos),
-                            leftBackPosVel.velocity,
-                    }).times(PARAMS.inPerTick),
-                    new DualNum<Time>(new double[]{
-                            (rightBackPosVel.position - lastRightBackPos),
-                            rightBackPosVel.velocity,
-                    }).times(PARAMS.inPerTick),
-                    new DualNum<Time>(new double[]{
-                            (rightFrontPosVel.position - lastRightFrontPos),
-                            rightFrontPosVel.velocity,
-                    }).times(PARAMS.inPerTick)
-            ));
-
-            lastLeftFrontPos = leftFrontPosVel.position;
-            lastLeftBackPos = leftBackPosVel.position;
-            lastRightBackPos = rightBackPosVel.position;
-            lastRightFrontPos = rightFrontPosVel.position;
-
-            lastHeading = heading;
-
-            pose = pose.plus(new Twist2d(
-                    twist.line.value(),
-                    headingDelta
-            ));
-
-            return twist.velocity().value();
-        }
-    }
 
     public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
@@ -273,31 +179,92 @@ public final class MecanumDrive {
         rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag * FRONT_SCALE);
     }
 
-    public void driveSpeed(double xPower, double yPower, double turnPower) {
-        // TODO use kinematics
-        double DRIVE_SPEED_SCALE_DOWN = 11;
-        double MIN_SPEED_DRIVE = 0.2;
-        // Scale down
-        xPower *= DRIVE_SPEED_SCALE_DOWN;
-        yPower *= DRIVE_SPEED_SCALE_DOWN;
-        turnPower *= DRIVE_SPEED_SCALE_DOWN;
+    public void setDrivePowers(double xPower, double yPower, double turnPower) {
+        setDrivePowers(new PoseVelocity2d(
+                new Vector2d(xPower, yPower), turnPower
+        ));
+    }
 
-        // Deadzones on absolute value
-        if (Math.abs(xPower) < MIN_SPEED_DRIVE) xPower = 0;
-        if (Math.abs(yPower) < MIN_SPEED_DRIVE) yPower = 0;
-        if (Math.abs(turnPower) < MIN_SPEED_DRIVE) turnPower = 0;
+    /**
+     * Builds a short, field-centric action from driver inputs with minimal fuss.
+     * Behavior:
+     *  - If the turn input dominates, do a small pure turn.
+     *  - Else, build a short spline to a nearby target (field-centric direction).
+     *  - Optionally blend a small heading change into the target pose if turn is present.
+     *
+     * Inputs:
+     *  - str: left stick X in [-1, 1] (positive = right)
+     *  - fwd: left stick Y in [-1, 1] (positive = forward in field frame)
+     *  - turn: right stick X in [-1, 1] (positive = CCW)
+     *
+     * Returns:
+     *  - Action to follow, or null if below deadband.
+     */
+    public Action buildDriverNudgeAction(double str, double fwd, double turn) {
+        // 1) Input filtering and intent classification
+        final double DEAD = 0.06;          // stick deadband
+        final double TURN_DOMINANCE = 0.20; // how much bigger turn must be vs translation to choose pure turn
 
-        // Mecanum mix (robot-centric)
-        double lf = yPower + xPower - turnPower;
-        double lb = yPower - xPower - turnPower;
-        double rb = yPower + xPower + turnPower;
-        double rf = yPower - xPower + turnPower;
+        double ax = Math.abs(str), ay = Math.abs(fwd), at = Math.abs(turn);
+        double transMag = Math.hypot(str, fwd);
 
-        //Set motor powers
-        leftFront.setPower(lf);
-        leftBack.setPower(lb);
-        rightBack.setPower(rb);
-        rightFront.setPower(rf);
+        boolean wantTranslate = transMag > DEAD;
+        boolean wantTurn = at > DEAD && (at > Math.max(ax, ay) + TURN_DOMINANCE);
+
+        // Nothing meaningful
+        if (!wantTranslate && !wantTurn) return null;
+
+        Pose2d pose = localizer.getPose();
+
+        // 2) Small pure turn when turning dominates
+        if (wantTurn && !wantTranslate) {
+            final double MAX_TURN_DEG = 25.0;
+            double dH = Math.toRadians(MAX_TURN_DEG) *
+                    com.acmerobotics.roadrunner.Math.clamp(turn, -1.0, 1.0);
+
+            TimeTurn tt = new TimeTurn(
+                    pose,
+                    dH,
+                    new TurnConstraints(
+                            PARAMS.maxAngVel,
+                            -PARAMS.maxAngAccel,
+                            PARAMS.maxAngAccel
+                    )
+            );
+            return new TurnAction(tt);
+        }
+
+        // 3) Build a short field-centric move with optional small heading change
+        // Scale step with stick magnitude
+        final double MIN_STEP = 4.0;  // inches
+        final double MAX_STEP = 10.0; // inches
+        transMag = com.acmerobotics.roadrunner.Math.clamp(transMag, 0.0, 1.0);
+        double step = MIN_STEP + (MAX_STEP - MIN_STEP) * transMag;
+
+        // Compute field-centric displacement directly from sticks
+        // str = +right, fwd = +forward (already field-centric by convention here)
+        Vector2d dFieldDir = (transMag > 1e-6)
+                ? new Vector2d(str / transMag, fwd / transMag)
+                : new Vector2d(0.0, 0.0);
+        Vector2d dField = dFieldDir.times(step);
+
+        // Small heading change if turn is present (but not dominant)
+        final double MAX_BLEND_TURN_DEG = 15.0;
+        double dHeading = Math.toRadians(MAX_BLEND_TURN_DEG) *
+                com.acmerobotics.roadrunner.Math.clamp(turn, -1.0, 1.0);
+
+        Rotation2d newHeading = pose.heading.plus(dHeading);
+        Pose2d target = new Pose2d(
+                new Vector2d(pose.position.x + dField.x, pose.position.y + dField.y),
+                newHeading
+        );
+
+        // 4) Build using a smooth spline, keeping current heading as tangent
+        // Use tangent as a double (radians) when required by builder
+        return actionBuilder(pose)
+//                .setConstraints(defaultVelConstraint, defaultAccelConstraint)
+                .splineToLinearHeading(target, pose.heading, defaultVelConstraint, defaultAccelConstraint) // tangent as Rotation2d
+                .build();
     }
 
     public final class FollowTrajectoryAction implements Action {
@@ -529,4 +496,102 @@ public final class MecanumDrive {
                 defaultVelConstraint, defaultAccelConstraint
         );
     }
+
+
+    /// ///////////// unused
+    public class DriveLocalizer implements Localizer {
+        public final Encoder leftFront, leftBack, rightBack, rightFront;
+        public final IMU imu;
+
+        private int lastLeftFrontPos, lastLeftBackPos, lastRightBackPos, lastRightFrontPos;
+        private Rotation2d lastHeading;
+        private boolean initialized;
+        private Pose2d pose;
+        public DriveLocalizer(Pose2d pose) {
+            leftFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftFront));
+            leftBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftBack));
+            rightBack = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightBack));
+            rightFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.rightFront));
+
+            imu = lazyImu.get();
+
+            // TODO: reverse encoders if needed
+            //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+
+            this.pose = pose;
+        }
+
+        @Override
+        public void setPose(Pose2d pose) {
+            this.pose = pose;
+        }
+
+        @Override
+        public Pose2d getPose() {
+            return pose;
+        }
+
+        @Override
+        public PoseVelocity2d update() {
+            PositionVelocityPair leftFrontPosVel = leftFront.getPositionAndVelocity();
+            PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
+            PositionVelocityPair rightBackPosVel = rightBack.getPositionAndVelocity();
+            PositionVelocityPair rightFrontPosVel = rightFront.getPositionAndVelocity();
+
+            YawPitchRollAngles angles = imu.getRobotYawPitchRollAngles();
+
+            FlightRecorder.write("MECANUM_LOCALIZER_INPUTS", new MecanumLocalizerInputsMessage(
+                    leftFrontPosVel, leftBackPosVel, rightBackPosVel, rightFrontPosVel, angles));
+
+            Rotation2d heading = Rotation2d.exp(angles.getYaw(AngleUnit.RADIANS));
+
+            if (!initialized) {
+                initialized = true;
+
+                lastLeftFrontPos = leftFrontPosVel.position;
+                lastLeftBackPos = leftBackPosVel.position;
+                lastRightBackPos = rightBackPosVel.position;
+                lastRightFrontPos = rightFrontPosVel.position;
+
+                lastHeading = heading;
+
+                return new PoseVelocity2d(new Vector2d(0.0, 0.0), 0.0);
+            }
+
+            double headingDelta = heading.minus(lastHeading);
+            Twist2dDual<Time> twist = kinematics.forward(new MecanumKinematics.WheelIncrements<>(
+                    new DualNum<Time>(new double[]{
+                            (leftFrontPosVel.position - lastLeftFrontPos),
+                            leftFrontPosVel.velocity,
+                    }).times(PARAMS.inPerTick),
+                    new DualNum<Time>(new double[]{
+                            (leftBackPosVel.position - lastLeftBackPos),
+                            leftBackPosVel.velocity,
+                    }).times(PARAMS.inPerTick),
+                    new DualNum<Time>(new double[]{
+                            (rightBackPosVel.position - lastRightBackPos),
+                            rightBackPosVel.velocity,
+                    }).times(PARAMS.inPerTick),
+                    new DualNum<Time>(new double[]{
+                            (rightFrontPosVel.position - lastRightFrontPos),
+                            rightFrontPosVel.velocity,
+                    }).times(PARAMS.inPerTick)
+            ));
+
+            lastLeftFrontPos = leftFrontPosVel.position;
+            lastLeftBackPos = leftBackPosVel.position;
+            lastRightBackPos = rightBackPosVel.position;
+            lastRightFrontPos = rightFrontPosVel.position;
+
+            lastHeading = heading;
+
+            pose = pose.plus(new Twist2d(
+                    twist.line.value(),
+                    headingDelta
+            ));
+
+            return twist.velocity().value();
+        }
+    }
+
 }

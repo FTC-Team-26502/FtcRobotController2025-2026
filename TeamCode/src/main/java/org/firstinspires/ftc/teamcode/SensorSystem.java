@@ -1,29 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
-import androidx.annotation.NonNull;
-
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
-import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import java.util.Timer;
 
 public class SensorSystem {
 
@@ -31,6 +15,8 @@ public class SensorSystem {
     protected final ColorSensor color;
     protected final DistanceSensor fl;
     protected final DistanceSensor fr;
+    protected boolean canShoot;
+    protected double timer;
 
     public static final double LIGHTRED = 0.3;
     public static final double LIGHTYELLOW = 0.388;
@@ -59,9 +45,30 @@ public class SensorSystem {
     }
 
 
-    public Action buildShootingAction() {
-        return new SequentialAction();
+
+
+    public void updateIndicatorLights(double currentTime) {
+        if (getColorRed() > 1500) {
+            setLight(LIGHTPURPLE);
+            timer = currentTime;
+        } else if (getColorGreen()>2000) {
+            setLight(LIGHTGREEN);
+            timer = currentTime;
+        } else if (currentTime - timer > 5) {
+            if (canShoot) {
+                setLight(LIGHTBLUE);
+            } else {
+                setLight(LIGHTRED);
+            }
+        } else {
+            setLight(0);
+        }
     }
+
+    public void setCanShoot(boolean canShoot) {
+        this.canShoot = canShoot;
+    }
+
 
 //    public void setLight(String color) {
 //        if (color == "Blue") {

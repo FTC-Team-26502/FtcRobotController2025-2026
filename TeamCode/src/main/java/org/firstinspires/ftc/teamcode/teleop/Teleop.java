@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
+
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.BaseCodeV3;
 
 public abstract class Teleop extends BaseCodeV3 {
+
+
 
     abstract public void runOpMode() throws InterruptedException;
 
@@ -16,20 +21,21 @@ public abstract class Teleop extends BaseCodeV3 {
             if (odo != null) {
                 odo.update();
             }
-             shootingLightIndicator();
+//             shootingLightIndicator();
             if(gamepad1.a) {
                 intake.startIntake();
             } else if (gamepad1.b) {
                 intake.stopIntake();
-            } else if (gamepad1.x && vision.checkShootPoosible()) {
-                shooter.setupShoot();
-                sleep(1000); //rplace with wait for speed and position
+            } else if (gamepad1.x && shooter.checkShootPoosible()) {
+                shooter.setupFlywheels();
+                shooter.setupAngler();
+                sleep(10);
                 shooter.shoot();
                 telemetry.addLine("shooting");
             } else if (gamepad1.y) {
                 shooter.stop();
             }
-            drive.driveSpeed(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x);
+            drive.setDrivePowers(-gamepad1.left_stick_x, -gamepad1.left_stick_y, -gamepad1.right_stick_x);
 //            telemetry.addData("Green: ", color.green());
 //            telemetry.addData("Blue: ", color.blue());
 //            telemetry.addData("Red: ", color.red());
@@ -66,4 +72,5 @@ public abstract class Teleop extends BaseCodeV3 {
             telemetry.update();
         }
     }
+
 }

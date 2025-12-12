@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-public class TeleopBlue extends Teleop {
+public class TeleopBlue extends TeleopWithActions {
 
 
     @Override

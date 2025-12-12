@@ -17,8 +17,6 @@ import java.util.List;
 
 public class VisionSystem {
 
-    public static final double DELTA_Y = 0.9;
-
     private final Telemetry telemetry;
 
     // Set this to your actual camera mount relative to the robot center
@@ -176,36 +174,6 @@ public class VisionSystem {
             return tag20;
         }
         return null;
-    }
-
-    public double distanceToTarget() {
-        AprilTagDetection tag = checkTag();
-        if ( tag == null ) {
-            return -1.0;
-        }
-        return tag.robotPose.getPosition().y; // /39.37007874;
-
-    }
-
-
-    /**
-     * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
-     * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
-     */
-    public boolean checkShootPoosible() {
-        AprilTagDetection tag = checkTag();
-        if ( tag == null ) {
-            return false;
-        }
-        telemetry.addLine("Got April tag");
-        double targetDistance = tag.robotPose.getPosition().y; // /39.37007874;
-        telemetry.addLine(String.format("Distance to target %s", targetDistance));
-        double minShootingAngle = Math.atan(DELTA_Y / targetDistance);
-        telemetry.addLine(String.format("min shooting angle %s", minShootingAngle));
-        if ( minShootingAngle > Math.toRadians(55) ) {
-            return false;
-        }
-        return true;
     }
 
 }

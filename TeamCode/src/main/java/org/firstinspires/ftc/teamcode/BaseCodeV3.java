@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public abstract class BaseCodeV3 extends LinearOpMode {
+public abstract class BaseCodeV3 extends LinearOpMode implements Clock{
 
     protected MecanumDrive drive;
     protected ShooterSystem shooter;
@@ -35,7 +35,7 @@ public abstract class BaseCodeV3 extends LinearOpMode {
             vision = new VisionSystem(hardwareMap, telemetry, blueAlliance);
         }
         if (useShooter ) {
-            shooter = new ShooterSystem(hardwareMap, telemetry, vision);
+            shooter = new ShooterSystem(hardwareMap, telemetry, vision, false);
         }
         //Init odometry
         if(useOdo) {
@@ -52,13 +52,7 @@ public abstract class BaseCodeV3 extends LinearOpMode {
         telemetry.update();
     }
 
-    public boolean shootingLightIndicator() {
-        boolean  canShoot = vision.checkShootPoosible();
-        if(!canShoot) {
-            sensors.setLight(SensorSystem.LIGHTRED);
-        } else {
-            sensors.setLight(SensorSystem.LIGHTBLUE);
-        }
-        return canShoot;
+    public double now() {
+        return this.getRuntime();
     }
 }
