@@ -196,44 +196,31 @@
 //
 //
 //    public void shoot() {
-//        double canShoot = vision.shootingCheck(); // prints pose if true
 //
-//        if (canShoot<0) {
-//            telemetry.addLine("CAN'T SHOOT");
-//            telemetry.update();
-//            light.setPosition(LIGHTRED);
+//        speed = 0.75;
+//        shooterLeft.setPower(speed);
+//        shooterRight.setPower(speed); // fixed
+//        shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+//        shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
 //
-//        } else {
-//            light.setPosition(LIGHTGREEN);
-//            // Spin both shooters
-//            double distance = selectiveAverage(canShoot,
-//                    blDistance.getDistance(DistanceUnit.METER),
-//                    brDistance.getDistance(DistanceUnit.METER)
-//                );
-//            speed = calculateShootingSpeed(distance);
-//            shooterLeft.setPower(speed);
-//            shooterRight.setPower(speed); // fixed
-//            shooterLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-//            shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
-//
-//            int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE);
-//            anglerLeft.setPower(ANGLER_SPEED);
-//            anglerRight.setPower(ANGLER_SPEED);
-//            anglerLeft.setTargetPosition(ticks);
-//            anglerRight.setTargetPosition(ticks);
-//            while (anglerLeft.getPower()> 0.5) {
-//                if (anglerLeft.getCurrentPosition() < 42 & anglerLeft.getCurrentPosition() > 38) {
-//                    anglerLeft.setTargetPosition(anglerLeft.getCurrentPosition());
-//                    anglerRight.setTargetPosition(anglerRight.getCurrentPosition());
-//                }
-//                telemetry.addData("Power", anglerLeft.getPower());
-//                telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
-//                telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
-//                telemetry.update();
+//        int ticks = (int) Math.round(ANGLE_TO_TICKS * ANGLE);
+//        anglerLeft.setPower(ANGLER_SPEED);
+//        anglerRight.setPower(ANGLER_SPEED);
+//        anglerLeft.setTargetPosition(ticks);
+//        anglerRight.setTargetPosition(ticks);
+//        while (anglerLeft.getPower()> 0.5) {
+//            if (anglerLeft.getCurrentPosition() < 42 & anglerLeft.getCurrentPosition() > 38) {
+//                anglerLeft.setTargetPosition(anglerLeft.getCurrentPosition());
+//                anglerRight.setTargetPosition(anglerRight.getCurrentPosition());
 //            }
-//            sleep(2000);
-//            inBackLeft.setPower(1);
-//            inBackRight.setPower(1);
+//            telemetry.addData("Power", anglerLeft.getPower());
+//            telemetry.addData("Target ticks;", anglerLeft.getTargetPosition());
+//            telemetry.addData("Current ticks;", anglerLeft.getCurrentPosition());
+//            telemetry.update();
+//        }
+//        sleep(2000);
+//        inBackLeft.setPower(1);
+//        inBackRight.setPower(1);
 //        }
 ////
 ////        // Brief non-tight wait to spin up (avoid freezing loop)
@@ -241,7 +228,7 @@
 ////        while (System.currentTimeMillis() < end) {
 ////            telemetry.addLine("Speeding up Outtake");
 ////            telemetry.update();
-////        }
+//        }
 //    }
 //
 //

@@ -1,20 +1,24 @@
-package org.firstinspires.ftc.teamcode.tuning;
+package org.firstinspires.ftc.teamcode;
+
+import android.app.Notification;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-
-import org.firstinspires.ftc.teamcode.Step;
+import com.acmerobotics.roadrunner.SleepAction;
 
 public class SleepSteps implements Step{
 
-    private double sleeper;
+    private SleepAction sleeper;
+    private double sec;
 
-    public SleepSteps(Sleeper sleeper) {
-        this.sleeper = sleeper;
+    public SleepSteps(double sec) {
+        this.sleeper = new SleepAction(sec);
+        this.sec = sec;
     }
 
     @Override
     public Status runStep(TelemetryPacket packet) {
-        return null;
+        while ( sleeper.run(packet) );
+        return Status.SUCCESS;
     }
 
 }

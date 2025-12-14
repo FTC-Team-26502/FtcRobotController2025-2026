@@ -25,14 +25,13 @@ public abstract class TeleopWithActions  extends BaseCodeV3 {
     // Action list that is advanced each loop
     private List<Action> runningActions = new ArrayList<>();
 
-    // Drive + optional mechanism example
-    private MecanumDrive drive;
     private CRServo servo; // example mechanism for InstantAction
 
     // Edge detection for buttons so we only enqueue once per press
     private boolean aPrev, bPrev, xPrev, yPrev, lbPrev, rbPrev, backPrev, startPrev;
 
     private boolean manualDriving = true;
+
 
     public void runOpModeTeleop() throws InterruptedException {
 
@@ -51,7 +50,7 @@ public abstract class TeleopWithActions  extends BaseCodeV3 {
                 //        fwd *= transScale;
                 //        str *= transScale;
                 //        turn *= rotScale;
-                drive.setDrivePowers(str, fwd, turn);
+                drive.setDrivePowers(fwd, str, turn);
 
             } else  {
                 // patching trajectories
@@ -85,12 +84,20 @@ public abstract class TeleopWithActions  extends BaseCodeV3 {
             } else if (pressedOnce(gamepad1.b, bPrev)) {
                 runningActions.add(intake.stopIntakeAction());
             }
+            if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
+                shooter.manualOverride = true;
+            }
             boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
             if (pressedOnce(gamepad1.x, xPrev)) {
-                if (canShoot) {
-                    runningActions.add(shooter.oneShotAction(this));
+                telemetry.addLine("x pressed");
+                    telemetry.addLine("Can shoot");
+                    runningActions.add(shooter.oneShotAction(this));                if (canShoot) {
+
+                        telemetry.addLine("Created Shooter action");
+                }else {
+                    telemetry.addLine("Can't shoot");
                 }
             } else if (pressedOnce(gamepad1.y, yPrev)) {
                 runningActions.add(shooter.stopAction());
@@ -102,9 +109,6 @@ public abstract class TeleopWithActions  extends BaseCodeV3 {
             // 3) Advance running actions
             List<Action> stillRunning = new ArrayList<>();
             for (Action action : runningActions) {
-                // draw previews for active actions
-                action.preview(packet.fieldOverlay());
-
                 // run returns true if it should be kept
                 if (action.run(packet)) {
                     stillRunning.add(action);

@@ -5,13 +5,13 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-public class TimeOutAction implements Action {
-    private final Action inner;
+public class TimeOutAction implements Step {
+    private final Step inner;
     private final double timeoutSec;
     private final Clock clock;
     private double start;
 
-    public TimeOutAction(Action inner, double timeoutSec, Clock clock) {
+    public TimeOutAction(Step inner, double timeoutSec, Clock clock) {
         this.inner = inner;
         this.timeoutSec = timeoutSec;
         this.clock = clock;
@@ -19,14 +19,19 @@ public class TimeOutAction implements Action {
     }
 
     @Override
-    public boolean run(TelemetryPacket packet) {
+    public Step.Status runStep(TelemetryPacket packet) {
         double now = clock.now();
         if (start < 0) {
             start = now;
         }
-        boolean keepRunning = inner.run(packet);
-        boolean timedOut = now - start >= timeoutSec;
-        return keepRunning && !timedOut;
+        Step.Status st = inner.runStep(packet);
+        if (st == Status.SUCCESS) {
+            return Status.SUCCESS;
+        }
+        if (now - start >= timeoutSec) {
+            return Status.FAILURE;
+        }
+        return st;
     }
 
 }
