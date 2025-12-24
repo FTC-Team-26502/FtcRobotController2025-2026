@@ -26,10 +26,14 @@ public abstract class Teleop extends BaseCodeV3 {
                 intake.startIntake();
             } else if (gamepad1.b) {
                 intake.stopIntake();
+            } else if (gamepad1.right_bumper) {
+                telemetry.addLine("mid intake stoped");
+                intake.stopMidIntake();
             } else if (gamepad1.x && shooter.checkShootPoosible()) {
                 shooter.setupFlywheels();
                 shooter.setupAngler();
                 sleep(10);
+                intake.startIntake();
                 shooter.shoot();
                 telemetry.addLine("shooting");
             } else if (gamepad1.y) {

@@ -12,23 +12,23 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class IntakeSystem {
 
-    private final CRServo fl, fr, ml, mr;
+    private final CRServo fr, ml, mr;
     private final Telemetry telemetry;
 
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
         this.telemetry = telemetry;
-        fl = hw.get(CRServo.class, "inFrontLeft");
+        //fl = hw.get(CRServo.class, "inFrontLeft");
         fr = hw.get(CRServo.class, "inFrontRight");
         ml = hw.get(CRServo.class, "inMiddleLeft");
         mr = hw.get(CRServo.class, "inMiddleRight");
 
-        fl.setDirection(CRServo.Direction.REVERSE);
+        //fl.setDirection(CRServo.Direction.REVERSE);
         ml.setDirection(CRServo.Direction.REVERSE);
         telemetry.addLine("Intake initialized");
     }
 
     public void stopIntake() {
-        fl.setPower(0);
+        //fl.setPower(0);
         fr.setPower(0);
         ml.setPower(0);
         mr.setPower(0);
@@ -46,8 +46,8 @@ public class IntakeSystem {
     }
 
     public void startIntake() {
-        fl.setPower(1);
-        fr.setPower(1);
+        //fl.setPower(1);
+        fr.setPower(-1);
         ml.setPower(1);
         mr.setPower(1);
     }
@@ -57,6 +57,21 @@ public class IntakeSystem {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 startIntake();
+                return false;
+            }
+        };
+    }
+    public void stopMidIntake() {
+        //fl.setPower(1);
+        ml.setPower(0);
+        mr.setPower(0);
+    }
+
+    public Action stopMidIntakeAction(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                stopMidIntake();
                 return false;
             }
         };

@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -83,6 +85,8 @@ public abstract class TeleopWithActions  extends BaseCodeV3 {
                 runningActions.add(intake.startIntakeAction());
             } else if (pressedOnce(gamepad1.b, bPrev)) {
                 runningActions.add(intake.stopIntakeAction());
+            } else if (gamepad1.right_bumper) {
+                runningActions.add(intake.stopMidIntakeAction());
             }
             if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
                 shooter.manualOverride = true;
