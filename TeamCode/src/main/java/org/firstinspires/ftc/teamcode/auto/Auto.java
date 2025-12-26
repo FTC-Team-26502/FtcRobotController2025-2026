@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  * First version of autonomous code for Decode.
  * Author: dorinamevans@gmail.com
  */
-public abstract class Auto extends BaseCodeV3 {
+public abstract class Auto extends FTC26502OpMode {
     int ballDistMultipliers;
     int yForBall;
     public void runOpModeAuto() throws InterruptedException {

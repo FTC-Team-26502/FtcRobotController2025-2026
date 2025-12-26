@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.TimeOutAction;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class TeleopWithActions  extends BaseCodeV3 {
+public abstract class TeleopWithActions  extends FTC26502OpMode {
     private FtcDashboard dash = FtcDashboard.getInstance();
     protected Action driveAction = null;
     protected long lastPlanNs = 0;

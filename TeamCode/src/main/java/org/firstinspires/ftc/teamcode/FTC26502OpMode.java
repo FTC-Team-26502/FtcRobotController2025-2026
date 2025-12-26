@@ -6,7 +6,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-public abstract class BaseCodeV3 extends LinearOpMode implements Clock{
+
+/***
+ * Base class for all FTC26502 OpModes
+ * Author: dorinamevans@gmail.com
+ * Autor: ...
+ */
+public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
 
     protected MecanumDrive drive;
     protected ShooterSystem shooter;
@@ -17,6 +23,16 @@ public abstract class BaseCodeV3 extends LinearOpMode implements Clock{
     protected boolean blueAlliance;
 
 
+    /**
+     * 
+     * @param useDrive
+     * @param useOdo
+     * @param useShooter
+     * @param useIntake
+     * @param useSensors
+     * @param useVision
+     * @param blueAlliance
+     */
     public void initOpMode(boolean useDrive, boolean useOdo,
                           boolean useShooter, boolean useIntake,
                           boolean useSensors, boolean useVision,
