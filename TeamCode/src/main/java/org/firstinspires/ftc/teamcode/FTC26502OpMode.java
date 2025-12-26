@@ -9,29 +9,48 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /***
  * Base class for all FTC26502 OpModes
- * Author: dorinamevans@gmail.com
- * Autor: ...
+ *
+ * <p>Provides initialization for drivetrain, odometry, shooter, intake, sensors, and vision.
+ * Subclasses choose which subsystems to enable via {@link #initOpMode(boolean, boolean, boolean, boolean, boolean, boolean, boolean)}.
+ * Implements {@link Clock} by exposing {@link #now()}.</p>
+ *
+ *
+ *
+ *
+ *@author: dorinamevans@gmail.com
+ *@author: sagnikbiswas712@gmail.com
  */
 public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
 
+
+
+
     protected MecanumDrive drive;
+    /** Projectile shooter initialized, nullable if useShooter is false*/
     protected ShooterSystem shooter;
+    /** Intake subsystem for taking in artifacts, nullable if useIntake is false*/
     protected IntakeSystem intake;
     protected SensorSystem sensors;
+
+    /** Vision subsystem used for aiming and calculating artifact trajectory, nullable if useIntake is false*/
     protected VisionSystem vision;
     protected GoBildaPinpointDriver odo;
     protected boolean blueAlliance;
 
 
     /**
-     * 
-     * @param useDrive
-     * @param useOdo
-     * @param useShooter
-     * @param useIntake
-     * @param useSensors
-     * @param useVision
-     * @param blueAlliance
+     * Initializes the selected robot subsystems and sets alliance color.
+     *
+     * <p>Only the subsystems specified by the boolean flags will be created and initialized.
+     * Call this from your OpMode's init phase.</p>
+     *
+     * @param useDrive     whether to initialize the mecanum drive with a default start pose
+     * @param useOdo       whether to initialize GoBilda Pinpoint odometry
+     * @param useShooter   whether to initialize the shooter system
+     * @param useIntake    whether to initialize the intake system
+     * @param useSensors   whether to initialize the sensor system (and set default light color)
+     * @param useVision    whether to initialize the vision system (also needed by shooter)
+     * @param blueAlliance whether the robot is on the blue alliance (affects vision/shooter behavior)
      */
     public void initOpMode(boolean useDrive, boolean useOdo,
                           boolean useShooter, boolean useIntake,
@@ -48,9 +67,17 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
             sensors.setLight(SensorSystem.LIGHTRED);
         }
         if (useVision || useShooter) {
+            /** <p> This is used reading the goal, sending the data {@link VisionSystem#checkTag()}
+              and only applies if useShooter is also true. blueAlliance boolean controls what apriltag it reads
+             {@link org.firstinspires.ftc.vision.apriltag.AprilTagDetection} </p>*/
             vision = new VisionSystem(hardwareMap, telemetry, blueAlliance);
         }
         if (useShooter ) {
+            /** <p> This is for shooting the artifacts and calculating
+             *  the trajectory of the artifacts {@link ShooterSystem#calculateShootingSpeed(double, double),
+             *  check {@link ShooterSystem#calculateShootingAngle(double)}}.
+             *  and setting up the shooter to be ready {@link ShooterSystem#shoot()} and setting up the speed
+             *  {@link ShooterSystem#setupFlywheels()} and angle {@link ShooterSystem#setupAngler()} </p>*/
             shooter = new ShooterSystem(hardwareMap, telemetry, vision, false);
         }
         //Init odometry
@@ -68,6 +95,13 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
         telemetry.update();
     }
 
+    /**
+     * Returns the current runtime of this OpMode in seconds.
+     *
+     * <p>Implements {@link Clock#now()} using {@link #getRuntime()}.</p>
+     *
+     * @return current runtime in seconds
+     */
     public double now() {
         return this.getRuntime();
     }
