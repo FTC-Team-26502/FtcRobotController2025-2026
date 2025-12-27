@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 
 @TeleOp(name = "Motor test")
-public abstract class motorTest extends LinearOpMode {
+public class MotorTest extends LinearOpMode {
     double power = 0.2;
     private DcMotorEx shooterLeft;
     private DcMotorEx shooterRight;
