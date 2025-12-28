@@ -21,7 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  */
 public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
 
-    protected static final boolean DEBUG = true;
+    protected static final boolean DEBUG = false;
 
     protected MecanumDrive drive;
     /** Projectile shooter initialized, nullable if useShooter is false*/

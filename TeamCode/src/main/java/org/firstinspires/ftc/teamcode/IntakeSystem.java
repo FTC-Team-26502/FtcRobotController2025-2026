@@ -57,21 +57,21 @@ public class IntakeSystem {
         return new Action() {
         @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                fr.setPower(-1);
+                fr.setPower(1);
                 return false;
             }
         };
 
     }
 
-    public Action firstRow() {
+    public Action firstRow(boolean on) {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if (fr.getPower() == 0) {
-                    fr.setPower(1);
+                if (fr.getPower() == 0 & on) {
+                    fr.setPower(-1);
 
-                } else {
+                } else if (fr.getPower() != 0 & on){
 
                     fr.setPower(0);
 
@@ -83,16 +83,16 @@ public class IntakeSystem {
         };
     }
 
-    public Action secondRow() {
+    public Action secondRow(boolean on) {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
 
-                if (ml.getPower() == 0 & mr.getPower() == 0) {
+                if (ml.getPower() == 0 & mr.getPower() == 0 & on) {
                     ml.setPower(1);
                     mr.setPower(1);
 
-                } else {
+                } else if (ml.getPower() != 0 & mr.getPower() != 0 & on) {
                     ml.setPower(0);
                     mr.setPower(0);
                 }

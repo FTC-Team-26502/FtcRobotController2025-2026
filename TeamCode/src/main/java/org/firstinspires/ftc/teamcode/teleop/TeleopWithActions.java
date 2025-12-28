@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.FTC26502OpMode;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public abstract class TeleopWithActions  extends FTC26502OpMode {
     private FtcDashboard dash = FtcDashboard.getInstance();
     protected Action driveAction = null;
@@ -29,10 +30,26 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
 
     private boolean manualDriving = true;
 
+    private boolean intakeSecondRowEnabled = false;
+    private boolean intakeFirstRowEnabled = false;
+    private boolean shooterEnabled = false;
+    private boolean manualOverrideEnabled = false;
+
+    private static boolean pressedOnce(boolean current, boolean previous) {
+        return current && !previous;
+    }
 
     public boolean runOpModeTeleop() throws InterruptedException {
 
+        waitForStart();
+
         while (opModeIsActive()) {
+
+            boolean a = gamepad1.a;
+            boolean b = gamepad1.b;
+            boolean x = gamepad1.x;
+            boolean y = gamepad1.y;
+            boolean lb = gamepad1.left_bumper;
 
             TelemetryPacket packet = new TelemetryPacket();
             // 1) Manual driving while actions can run concurrently
@@ -73,29 +90,42 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             }
             // Keep localization fresh
             drive.updatePoseEstimate();
-            // check intake
-            if (gamepad1.b) /* middle intake */ {
-                runningActions.add(intake.secondRow());
-            } else if (gamepad1.a) /* Rubber band intake */ {
-                runningActions.add(intake.firstRow());
-            } else if (gamepad1.left_bumper) {
+            // check intake DO NOT chain the controls with else if (makes buttons unreliable and not consistently pressed)
+
+            if (pressedOnce(b, bPrev)) {
+                runningActions.add(intake.secondRow((pressedOnce(b, bPrev))));   // start
+            }
+            if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
+                runningActions.add(intake.firstRow((pressedOnce(a, aPrev))));
+            }
+
+            if (lb) {
                 runningActions.add(intake.stallDetected());
             }
+
             if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
                 shooter.manualOverride = true;
             }
             boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
-            if (gamepad1.x) {
+            if (pressedOnce(x, xPrev)) {
                 telemetry.addLine("x pressed");
                 telemetry.addLine("Can shoot");
                 runningActions.add(shooter.oneShotAction(this));
 
-            } else if (gamepad1.y) {
+            }
+
+            if (pressedOnce(y, yPrev)) {
                 runningActions.add(shooter.stopAction());
             }
             // TODO add button for manual override
+
+            aPrev = a;
+            bPrev = b;
+            xPrev = x;
+            yPrev = y;
+            lbPrev = lb;
 
 
             // 3) Advance running actions
@@ -118,29 +148,15 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             dash.sendTelemetryPacket(packet);
 
             // Update previous states for edge detection
-            aPrev = gamepad1.a;
-            bPrev = gamepad1.b;
-            xPrev = gamepad1.x;
-            yPrev = gamepad1.y;
-            lbPrev = gamepad1.left_bumper;
+
+
             rbPrev = gamepad1.right_bumper;
             backPrev = gamepad1.back;
             startPrev = gamepad1.start;
             dash.sendTelemetryPacket(packet);
         }
 
-    return false;
-
-
-
-
-    }
-
-
-    private static boolean pressedOnce(boolean current, boolean previous){
-        return current && !previous;
+        return false;
     }
 
 }
-
-
