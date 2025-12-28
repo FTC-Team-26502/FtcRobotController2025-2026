@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class IntakeSystem {
 
-    private final CRServo fr, ml, mr, bl, br;
+    private final CRServo fr, ml, mr;
     private final Telemetry telemetry;
 
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
@@ -21,8 +21,7 @@ public class IntakeSystem {
         fr = hw.get(CRServo.class, "inFrontRight");
         ml = hw.get(CRServo.class, "inMiddleLeft");
         mr = hw.get(CRServo.class, "inMiddleRight");
-        bl = hw.get(CRServo.class, "inBackLeft");
-        br = hw.get(CRServo.class, "inBackRight");
+
 
         //fl.setDirection(CRServo.Direction.REVERSE);
         ml.setDirection(CRServo.Direction.REVERSE);
@@ -34,8 +33,7 @@ public class IntakeSystem {
         fr.setPower(0);
         ml.setPower(0);
         mr.setPower(0);
-        bl.setPower(0);
-        br.setPower(0);
+
 
     }
 
@@ -55,8 +53,7 @@ public class IntakeSystem {
         fr.setPower(-1);
         ml.setPower(1);
         mr.setPower(1);
-        bl.setPower(1);
-        br.setPower(1);
+
     }
 
     public Action startIntakeAction(){
@@ -74,6 +71,59 @@ public class IntakeSystem {
         mr.setPower(0);
 
     }
+
+    public Action stallDetected() {
+        return new Action() {
+        @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                fr.setPower(-1);
+                return false;
+            }
+        };
+
+    }
+
+    public Action firstRow() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                if (fr.getPower() == 0) {
+                    fr.setPower(1);
+
+                } else {
+
+                    fr.setPower(0);
+
+                }
+
+                return false;
+            }
+
+        };
+    }
+
+    public Action secondRow() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+
+                if (ml.getPower() == 0 & mr.getPower() == 0) {
+                    ml.setPower(1);
+                    mr.setPower(1);
+
+                } else {
+                    ml.setPower(0);
+                    mr.setPower(0);
+                }
+                return false;
+            }
+        };
+
+    }
+
+
+
+
 
     public Action stopMidIntakeAction(){
         return new Action() {
