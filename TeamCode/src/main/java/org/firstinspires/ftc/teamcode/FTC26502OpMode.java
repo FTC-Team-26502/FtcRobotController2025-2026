@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -14,16 +16,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Subclasses choose which subsystems to enable via {@link #initOpMode(boolean, boolean, boolean, boolean, boolean, boolean, boolean)}.
  * Implements {@link Clock} by exposing {@link #now()}.</p>
  *
- *
- *
- *
  *@author: dorinamevans@gmail.com
  *@author: sagnikbiswas712@gmail.com
  */
 public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
 
-
-
+    protected static final boolean DEBUG = true;
 
     protected MecanumDrive drive;
     /** Projectile shooter initialized, nullable if useShooter is false*/
@@ -36,6 +34,14 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
     protected VisionSystem vision;
     protected GoBildaPinpointDriver odo;
     protected boolean blueAlliance;
+
+    protected FTC26502OpMode() {
+        if (DEBUG) {
+            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+            telemetry.setMsTransmissionInterval(1000);
+            telemetry.setAutoClear(false);
+        }
+    }
 
 
     /**
@@ -61,7 +67,9 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
             drive = new MecanumDrive(hardwareMap, startPose);
         }
 
-        if (useIntake) intake = new IntakeSystem(hardwareMap, telemetry);
+        if (useIntake) {
+            intake = new IntakeSystem(hardwareMap, telemetry);
+        }
         if (useSensors) {
             sensors = new SensorSystem(hardwareMap, telemetry);
             sensors.setLight(SensorSystem.LIGHTRED);

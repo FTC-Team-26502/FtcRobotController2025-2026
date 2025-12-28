@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.SequentialAction;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -29,57 +28,46 @@ public class IntakeSystem {
         telemetry.addLine("Intake initialized");
     }
 
-    public void stopIntake() {
-        //fl.setPower(0);
-        fr.setPower(0);
-        ml.setPower(0);
-        mr.setPower(0);
-        bl.setPower(0);
-        br.setPower(0);
-
-    }
-
 
     public Action stopIntakeAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                stopIntake();
+                //fl.setPower(0);
+                fr.setPower(0);
+                ml.setPower(0);
+                mr.setPower(0);
+                bl.setPower(0);
+                br.setPower(0);
+
                 return false;
             }
         };
-    }
-
-    public void startIntake() {
-        //fl.setPower(1);
-        fr.setPower(-1);
-        ml.setPower(1);
-        mr.setPower(1);
-        bl.setPower(1);
-        br.setPower(1);
     }
 
     public Action startIntakeAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                startIntake();
+                //fl.setPower(1);
+                fr.setPower(-1);
+                ml.setPower(1);
+                mr.setPower(1);
+                bl.setPower(1);
+                br.setPower(1);
                 return false;
             }
         };
-    }
-    public void stopMidIntake() {
-        //fl.setPower(1);
-        ml.setPower(0);
-        mr.setPower(0);
-
     }
 
     public Action stopMidIntakeAction(){
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                stopMidIntake();
+                //fl.setPower(1);
+                ml.setPower(0);
+                mr.setPower(0);
+
                 return false;
             }
         };

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -16,7 +15,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 public class ShooterSystem {
@@ -123,7 +121,7 @@ public class ShooterSystem {
                         return Status.SUCCESS;
                     }
                 },
-                new SleepSteps(0.5),
+                new SleepStep(0.5),
                 new Step() {
                     @Override
                     public Status runStep(TelemetryPacket packet) {
@@ -133,7 +131,7 @@ public class ShooterSystem {
                     }
                 },
                 setupShootStepAction(),
-                new SleepSteps(3),
+                new SleepStep(3),
                 new Step() {
                     @Override
                     public Status runStep(TelemetryPacket packet) {
