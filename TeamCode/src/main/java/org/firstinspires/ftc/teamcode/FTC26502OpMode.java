@@ -21,8 +21,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  */
 public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
 
-    protected static final boolean DEBUG = true;
-
     protected MecanumDrive drive;
     /** Projectile shooter initialized, nullable if useShooter is false*/
     protected ShooterSystem shooter;
@@ -34,15 +32,7 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
     protected VisionSystem vision;
     protected GoBildaPinpointDriver odo;
     protected boolean blueAlliance;
-
-    protected FTC26502OpMode() {
-        if (DEBUG) {
-            telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-            telemetry.setMsTransmissionInterval(1000);
-            telemetry.setAutoClear(false);
-        }
-    }
-
+    
 
     /**
      * Initializes the selected robot subsystems and sets alliance color.
