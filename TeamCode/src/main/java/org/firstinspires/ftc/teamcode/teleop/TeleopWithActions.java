@@ -31,7 +31,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
 
 
     public boolean runOpModeTeleop() throws InterruptedException {
-
+        waitForStart();
         while (opModeIsActive()) {
 
             TelemetryPacket packet = new TelemetryPacket();
