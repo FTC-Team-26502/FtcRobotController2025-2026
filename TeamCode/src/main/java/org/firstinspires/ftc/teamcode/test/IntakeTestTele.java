@@ -26,8 +26,8 @@ public class IntakeTestTele extends LinearOpMode {
             intakeServo = hardwareMap.get(CRServo.class, "inFrontRight");
             intakeServo1 = hardwareMap.get(CRServo.class, "inMiddleRight");
             intakeServo2 = hardwareMap.get(CRServo.class, "inMiddleLeft");
-        intakeServo3 = hardwareMap.get(CRServo.class, "inBackRight");
-        intakeServo4 = hardwareMap.get(CRServo.class, "inBackLeft");
+            intakeServo3 = hardwareMap.get(CRServo.class, "inBackRight");
+            intakeServo4 = hardwareMap.get(CRServo.class, "inBackLeft");
             waitForStart();
             while(opModeIsActive()) {
                  power = gamepad1.left_stick_y;

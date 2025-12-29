@@ -40,9 +40,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     }
 
     public boolean runOpModeTeleop() throws InterruptedException {
-
         waitForStart();
-
         while (opModeIsActive()) {
 
             boolean a = gamepad1.a;
