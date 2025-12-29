@@ -64,7 +64,7 @@ public class IntakeSystem {
         return new Action() {
         @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                fr.setPower(-1);
+                fr.setPower(1);
                 return false;
             }
         };
@@ -85,7 +85,7 @@ public class IntakeSystem {
         };
     }
 
-    public Action secondRow() {
+    public Action secondRow(boolean on) {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
