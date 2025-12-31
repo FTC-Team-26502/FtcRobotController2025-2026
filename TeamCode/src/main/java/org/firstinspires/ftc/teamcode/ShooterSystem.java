@@ -25,7 +25,7 @@ public class ShooterSystem {
     protected DcMotorEx shooterLeft, shooterRight;
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
-    private VisionSystem vision;
+    protected VisionSystem vision;
     protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
