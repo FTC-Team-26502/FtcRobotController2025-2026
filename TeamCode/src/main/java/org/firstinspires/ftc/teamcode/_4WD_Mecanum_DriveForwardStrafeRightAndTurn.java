@@ -24,7 +24,7 @@ public class _4WD_Mecanum_DriveForwardStrafeRightAndTurn extends LinearOpMode {
     right_front = hardwareMap.get(DcMotor.class, "right_front");
 
     // Put initialization blocks here.
-    left_rear.setDirection(DcMotorSimple.Direction.REVERSE);
+    right_rear.setDirection(DcMotorSimple.Direction.REVERSE);
     left_front.setDirection(DcMotorSimple.Direction.REVERSE);
     waitForStart();
     if (opModeIsActive()) {
@@ -33,7 +33,7 @@ public class _4WD_Mecanum_DriveForwardStrafeRightAndTurn extends LinearOpMode {
       right_front.setPower(0.5);
       left_rear.setPower(0.5);
       left_front.setPower(0.5);
-      sleep(3000);
+      sleep(10000);
       right_rear.setPower(0);
       right_front.setPower(0);
       left_rear.setPower(0);

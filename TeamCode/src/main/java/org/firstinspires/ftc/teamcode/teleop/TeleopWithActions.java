@@ -91,10 +91,10 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             // check intake DO NOT chain the controls with else if (makes buttons unreliable and not consistently pressed)
 
             if (pressedOnce(b, bPrev)) {
-                runningActions.add(intake.secondRow((pressedOnce(b, bPrev))));   // start
+                runningActions.add(intake.secondRow());   // start
             }
             if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
-                runningActions.add(intake.firstRow((pressedOnce(a, aPrev))));
+                runningActions.add(intake.firstRow());
             }
 
             if (lb) {

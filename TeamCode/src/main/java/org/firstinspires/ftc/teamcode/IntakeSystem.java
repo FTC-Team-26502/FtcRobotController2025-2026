@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class IntakeSystem {
 
-    private final CRServo fr, ml, mr, bl, br;
+    protected final CRServo fr, ml, mr, bl, br;
     private final Telemetry telemetry;
 
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
@@ -75,7 +75,7 @@ public class IntakeSystem {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if (fr.getPower() == 0) {
-                    fr.setPower(1);
+                    fr.setPower(-1);
                 } else {
                     fr.setPower(0);
                 }
@@ -85,7 +85,7 @@ public class IntakeSystem {
         };
     }
 
-    public Action secondRow(boolean on) {
+    public Action secondRow() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
