@@ -13,10 +13,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class ShooterTuningOpMode extends FTC26502OpMode {
 
     public static double angleDeg = 45;
-    public static double shooterPower = 0.2;
-
-    public static double leftVelocity = 0.0;
-    public static double rightVelocity = 0.0;
+    public static double shooterPowerLeft = 0.2;
+    public static double shooterPowerRight = 0.2;
+    public static double intakePower = 1;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -26,7 +25,7 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
 
-        initOpMode(false, false, true, false, false, false, true);
+        initOpMode(false, false, true, false, false, false, false);
 
         waitForStart();
         long startMs = System.currentTimeMillis();
@@ -36,11 +35,18 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
             // check if angle changed and set the
 
             telemetry.addData("angle", angleDeg);
-            telemetry.addData("shooter power", shooterPower);
+            telemetry.addData("shooter power left", shooterPowerLeft);
+            telemetry.addData("shooter power right", shooterPowerRight);
+            telemetry.addData("intake power", intakePower);
             telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
             telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
-            shooter.shooterLeft.setPower(shooterPower);
-            shooter.shooterRight.setPower(shooterPower);
+            telemetry.addData("power", shooter.shooterLeft.getPower());
+            shooter.shooterLeft.setPower(shooterPowerLeft);
+            shooter.shooterRight.setPower(shooterPowerRight);
+            shooter.anglerLeft.setPower(0.2);
+            shooter.anglerRight.setPower(0.2);
+            shooter.anglerLeft.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
+            shooter.anglerRight.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
             telemetry.update();
 
             // Optional: richer Dashboard packet (graphs, overlays)

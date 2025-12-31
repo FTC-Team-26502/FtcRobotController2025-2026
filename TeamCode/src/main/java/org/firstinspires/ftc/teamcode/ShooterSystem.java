@@ -21,7 +21,7 @@ public class ShooterSystem {
     private static final double DEFAULT_FLYWHEEL_SPEED = 3000; // ticks per second
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
-    private DcMotorEx anglerLeft, anglerRight;
+    protected DcMotorEx anglerLeft, anglerRight;
     protected DcMotorEx shooterLeft, shooterRight;
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
