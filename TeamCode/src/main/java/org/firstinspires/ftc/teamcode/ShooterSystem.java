@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -18,64 +17,44 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-@Config // ===== NEW (Dashboard support) =====
 public class ShooterSystem {
-
-    /* =====================================================
-       ===== NEW PID DASHBOARD VARIABLES (ADDITIVE) =====
-       ===================================================== */
-    public static double PID_TARGET_VELOCITY = 3000; // ticks/sec
-    public static double PID_kP = 0.00035;
-    public static double PID_kI = 0.000001;
-    public static double PID_kD = 0.00002;
-    public static double PID_TOLERANCE = 40;
-    public static double PID_MAX_POWER = 1.0;
-    public static int angle = 45;
-    /* ===================================================== */
-
     private static final double DEFAULT_FLYWHEEL_SPEED = 3000; // ticks per second
-    private static final double SHOOTER_DEFAULT_ANGLE = Math.PI / 4;
-
+    private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
     protected DcMotorEx anglerLeft, anglerRight;
     protected DcMotorEx shooterLeft, shooterRight;
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
-    private VisionSystem vision;
+    protected VisionSystem vision;
     protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
-    private final double ANGLE_TO_TICKS = (1 / 360.0) * 537.6;
+    private final double ANGLE_TO_TICKS = 1400 / 360 ;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
     protected double shootingAngle = -1.0;
     private boolean usingIMU = false;
 
-    /* =====================================================
-       ===== NEW PID STATE (ADDITIVE) =====
-       ===================================================== */
-    private double pidLeftIntegral = 0;
-    private double pidRightIntegral = 0;
-    private double pidLeftLastError = 0;
-    private double pidRightLastError = 0;
-    private long pidLastTimeNs = System.nanoTime();
-    /* ===================================================== */
+    // Shooter readiness gate
+    private static final double READY_TOLERANCE = 30; // ticks/sec
+    private static final double READY_TIME = 0.15;    // seconds
+    private long shooterReadyStartNs = 0;
 
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
         this.vision = vision;
         shooterIMU = hw.get(IMU.class, "shooterIMU");
         this.manualOverride = manualOverride;
 
+        // Set how the IMU is mounted on the robot. Update these to match your physical mounting.
         RevHubOrientationOnRobot.LogoFacingDirection logoDir =
-                RevHubOrientationOnRobot.LogoFacingDirection.DOWN;
+                RevHubOrientationOnRobot.LogoFacingDirection.DOWN;      // change as needed
         RevHubOrientationOnRobot.UsbFacingDirection usbDir =
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;  // change as needed
         IMU.Parameters params = new IMU.Parameters(
                 new RevHubOrientationOnRobot(logoDir, usbDir));
         shooterIMU.initialize(params);
-
         anglerLeft = hw.get(DcMotorEx.class, "anglerLeft");
         anglerRight = hw.get(DcMotorEx.class, "anglerRight");
         shooterLeft = hw.get(DcMotorEx.class, "shooterLeft");
@@ -101,9 +80,27 @@ public class ShooterSystem {
 
         bl = hw.get(CRServo.class, "inBackLeft");
         br = hw.get(CRServo.class, "inBackRight");
-        bl.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        bl.setDirection(DcMotorSimple.Direction.REVERSE);
         this.telemetry = telemetry;
+    }
+    private boolean shooterAtSpeed(double target) {
+        double lv = shooterLeft.getVelocity();
+        double rv = shooterRight.getVelocity();
+
+        boolean inRange =
+                Math.abs(lv - target) < READY_TOLERANCE &&
+                        Math.abs(rv - target) < READY_TOLERANCE;
+
+        long now = System.nanoTime();
+
+        if (inRange) {
+            if (shooterReadyStartNs == 0) shooterReadyStartNs = now;
+            return (now - shooterReadyStartNs) / 1e9 >= READY_TIME;
+        } else {
+            shooterReadyStartNs = 0;
+            return false;
+        }
     }
 
     // Convert ticks/sec -> m/s
@@ -115,64 +112,14 @@ public class ShooterSystem {
         return revsPerSec * wheelCircumference;
     }
 
-    // meters/sec -> ticks/sec
+    // Convenience: meters/sec -> ticks/sec (inverse)
     public static double metersPerSecToTicksPerSec(double metersPerSec) {
         double ticksPerRev = 120;
+        //Wheel circumference C = π × D
         double wheelDiameterMeters = 0.096;
         double wheelCircumference = Math.PI * wheelDiameterMeters;
         return metersPerSec * ticksPerRev / wheelCircumference;
     }
-
-    /* =====================================================
-       ===== NEW PID VELOCITY CONTROLLER (ADDITIVE) =====
-       ===================================================== */
-    public boolean updateShooterPID() {
-
-        long now = System.nanoTime();
-        double dt = (now - pidLastTimeNs) / 1e9;
-        pidLastTimeNs = now;
-        if (dt <= 0) return false;
-
-        double lv = shooterLeft.getVelocity();
-        double rv = shooterRight.getVelocity();
-
-        double le = PID_TARGET_VELOCITY - lv;
-        double re = PID_TARGET_VELOCITY - rv;
-
-        pidLeftIntegral += le * dt;
-        pidRightIntegral += re * dt;
-
-        double ld = (le - pidLeftLastError) / dt;
-        double rd = (re - pidRightLastError) / dt;
-
-        pidLeftLastError = le;
-        pidRightLastError = re;
-
-        double lp = PID_kP * le + PID_kI * pidLeftIntegral + PID_kD * ld;
-        double rp = PID_kP * re + PID_kI * pidRightIntegral + PID_kD * rd;
-
-        lp = Math.max(-PID_MAX_POWER, Math.min(PID_MAX_POWER, lp));
-        rp = Math.max(-PID_MAX_POWER, Math.min(PID_MAX_POWER, rp));
-
-        shooterLeft.setPower(lp);
-        shooterRight.setPower(rp);
-        anglerLeft.setTargetPosition(angle);
-        anglerRight.setTargetPosition(angle);
-
-        telemetry.addData("PID Target", PID_TARGET_VELOCITY);
-        telemetry.addData("PID Left Vel", lv);
-        telemetry.addData("PID Right Vel", rv);
-
-        return Math.abs(le) < PID_TOLERANCE &&
-                Math.abs(re) < PID_TOLERANCE;
-    }
-
-    /** PID‑only tuning helper */
-    public Step.Status setupFlywheelsPIDTuning() {
-        return updateShooterPID() ? Step.Status.SUCCESS : Step.Status.RUNNING;
-    }
-
-    /* ===================== YOUR ORIGINAL CODE ===================== */
 
     public Action oneShotAction(Clock clock) {
         return new SequentialSteps(
@@ -187,7 +134,8 @@ public class ShooterSystem {
                     }
                 },
                 new TimeOutAction(setupFlywheelStepAction(), 2, clock),
-                new TimeOutAction(setupAnglerStepAction(), 2, clock),
+                new TimeOutAction(
+                        setupAnglerStepAction(), 2, clock),
                 new Step() {
                     @Override
                     public Status runStep(TelemetryPacket packet) {
@@ -220,73 +168,130 @@ public class ShooterSystem {
     }
 
     public Step.Status setupFlywheels() {
-        double angularSpeed = DEFAULT_FLYWHEEL_SPEED;
+        double angularSpeed = DEFAULT_FLYWHEEL_SPEED; //ticks/sec
         shootingAngle = SHOOTER_DEFAULT_ANGLE;
-
         if (!manualOverride) {
             AprilTagDetection tag = vision.checkTag();
-            if (tag == null) return Step.Status.FAILURE;
-
-            double targetDistance = getDistanceToTargetMeters(tag);
-            this.shootingAngle = calculateShootingAngle(targetDistance);
-
-            double speed = calculateShootingSpeed(targetDistance, shootingAngle);
-            if (speed < 0) return Step.Status.FAILURE;
-
-            angularSpeed = metersPerSecToTicksPerSec(speed);
-            if (angularSpeed > DEFAULT_FLYWHEEL_SPEED) {
-                angularSpeed = DEFAULT_FLYWHEEL_SPEED;
+            if (tag == null) {
+                return Step.Status.FAILURE;
             }
+            double tagDistance = getDistanceToTargetMeters(tag);
+            telemetry.addData( "tag distance ", tagDistance );
+//            double targetDistance = selectiveAverage(tagDistance,
+//                    blDist.getDistance(DistanceUnit.METER),
+//                    brDist.getDistance(DistanceUnit.METER));
+            double targetDistance = tagDistance;
+            this.shootingAngle = calculateShootingAngle(targetDistance);
+            telemetry.addLine(String.format("target shooting angle %.2f", Math.toDegrees(shootingAngle)));
+            double speed = calculateShootingSpeed(targetDistance, shootingAngle); // mps
+            if (speed < 0) {
+                return Step.Status.FAILURE;
+            }
+            angularSpeed = metersPerSecToTicksPerSec(speed);
+            //New check to see if the motor speed stays steady after reaching target
+            if (shooterAtSpeed(angularSpeed)) {
+                return Step.Status.SUCCESS;
+            }
+            telemetry.addLine(String.format("target %2f left %2f right %2f", angularSpeed,
+                    shooterLeft.getVelocity(), shooterRight.getVelocity()));
         }
-
-        if (angularSpeed - 10 < shooterLeft.getVelocity() &&
-                angularSpeed - 10 < shooterRight.getVelocity()) {
+        if ( angularSpeed - 10 < shooterLeft.getVelocity() &&
+                angularSpeed -10 < shooterRight.getVelocity()) {
+            telemetry.update();
             return Step.Status.SUCCESS;
         }
-
         shooterLeft.setVelocity(angularSpeed);
         shooterRight.setVelocity(angularSpeed);
         return Step.Status.RUNNING;
     }
 
     public Step.Status setupAngler() {
-        if (manualOverride) shootingAngle = SHOOTER_DEFAULT_ANGLE;
-
+        telemetry.addLine("setup angler called");
+        if (manualOverride) {
+            shootingAngle = SHOOTER_DEFAULT_ANGLE;
+        }
         int ticks = (int) Math.round(ANGLE_TO_TICKS * Math.toDegrees(shootingAngle));
+        telemetry.addData("ticks", ticks);
         anglerLeft.setPower(ANGLER_SPEED);
         anglerRight.setPower(ANGLER_SPEED);
         anglerLeft.setTargetPosition(ticks);
         anglerRight.setTargetPosition(ticks);
-
         if (usingIMU) {
-            return Math.abs(
-                    Math.abs(shooterIMU.getRobotYawPitchRollAngles()
-                            .getPitch(AngleUnit.RADIANS)) - shootingAngle)
-                    < Math.toRadians(3)
-                    ? Step.Status.SUCCESS
-                    : Step.Status.RUNNING;
-        }
+            if (
+                    Math.abs(
+                            Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
+                                    - shootingAngle) < Math.toRadians(3)) {
+                telemetry.addLine(String.format(
+                        "shooting angle %.2f imu angle %.2f",
+                        shootingAngle,
+                        Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
+                ));
+                return Step.Status.SUCCESS;
+            }
+            return Step.Status.RUNNING;
+        } else {
 
-        return Math.abs(anglerLeft.getTargetPosition()
-                - anglerLeft.getCurrentPosition()) < 3
-                ? Step.Status.SUCCESS
-                : Step.Status.RUNNING;
+            telemetry.addLine("setup angler done");
+            telemetry.update();
+            if (Math.abs(anglerLeft.getTargetPosition() - anglerLeft.getCurrentPosition() ) < 3 ) {
+                return Step.Status.SUCCESS;
+            } else {
+                return Step.Status.RUNNING;
+            }
+
+        }
+    }
+
+
+    public static double selectiveAverage(double value, double a, double b) {
+        int count = 1;
+        double sum = value;
+        if (Math.abs(a - value) <= 0.1) {
+            sum += a;
+            count++;
+        }
+        if (Math.abs(b - value) <= 0.1) {
+            sum += b;
+            count++;
+        }
+        return sum / count;
     }
 
     public Action setupFlywheelAction() {
-        return packet -> setupFlywheels() == Step.Status.RUNNING;
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                telemetry.addLine("Shooting setup started");
+                return setupFlywheels() == Step.Status.RUNNING;
+            }
+        };
     }
 
     public Step setupFlywheelStepAction() {
-        return packet -> setupFlywheels();
+        return new Step() {
+            @Override
+            public Step.Status runStep(TelemetryPacket telemetryPacket) {
+                return setupFlywheels();
+            }
+        };
     }
 
     public Action setupAnglerAction() {
-        return packet -> setupAngler() == Step.Status.RUNNING;
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                return setupAngler() == Step.Status.RUNNING;
+            }
+        };
     }
 
     public Step setupAnglerStepAction() {
-        return packet -> setupAngler();
+        return new Step() {
+            @Override
+            public Step.Status runStep(TelemetryPacket telemetryPacket) {
+                return setupAngler();
+            }
+        };
     }
 
     public void shoot() {
@@ -294,17 +299,27 @@ public class ShooterSystem {
         br.setPower(1);
     }
 
-    public Action shootAction() {
-        return packet -> {
-            shoot();
-            return false;
+    public Action shootAction(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                shoot();
+                telemetry.addLine("Shooting");
+                return false;
+            }
         };
     }
 
     public Step setupShootStepAction() {
-        return packet -> {
-            shoot();
-            return Step.Status.SUCCESS;
+        return new Step() {
+            @Override
+            public Step.Status runStep(TelemetryPacket telemetryPacket) {
+                telemetry.addLine("shoot starts");
+                shoot();
+                telemetry.addLine("shoot done");
+                telemetry.update();
+                return Status.SUCCESS;
+            }
         };
     }
 
@@ -313,48 +328,91 @@ public class ShooterSystem {
         shooterRight.setPower(0);
         anglerLeft.setPower(0);
         anglerRight.setPower(0);
-        bl.setPower(0);
         br.setPower(0);
+        bl.setPower(0);
+        telemetry.addLine("Shotting stoped 1");
     }
 
-    public Action stopAction() {
-        return packet -> {
-            stop();
-            return false;
+    public Action stopAction(){
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                stop();
+                telemetry.addLine("Shooting stopped");
+                return false;
+            }
         };
     }
 
-    public Step stopStepAction() {
-        return packet -> {
-            stop();
-            return Step.Status.SUCCESS;
+    public Step stopStepAction(){
+
+        return new Step() {
+            @Override
+            public Step.Status runStep(TelemetryPacket telemetryPacket) {
+                stop();
+                telemetry.addLine("Shooting stopped");
+                return Status.SUCCESS;
+            }
         };
     }
 
-    public double calculateShootingSpeed(double d, double angle) {
+//    double calcSpeed() {
+//        double d = (blDist.getDistance(DistanceUnit.METER) + brDist.getDistance(DistanceUnit.METER)) / 2;
+//        return (d * Math.sqrt(GRAVITY / (d - VisionSystem.DELTA_Y))) / SPEED_MULTIPLIER;
+//    }
+//
+    public double calculateShootingSpeed(double d, double shootingAngle){
+        //
         double deltaH = DELTA_Y;
-        if (d * Math.tan(angle) - deltaH > 0) {
+        if (d * Math.tan(shootingAngle) - deltaH > 0) {
             return Math.sqrt(
                     (GRAVITY * d * d) /
-                            (2.0 * Math.pow(Math.cos(angle), 2) *
-                                    (d * Math.tan(angle) - deltaH)));
+                    (2.0 * Math.pow(Math.cos(shootingAngle), 2) *
+                            (d * Math.tan(shootingAngle) - deltaH)));
+        }  else {
+            return -1.0;
         }
-        return -1.0;
+
     }
 
+    /**
+     * Returns true if Tag 20 is visible with pose info (can shoot), false otherwise.
+     * When true, also prints Tag 20 pose to telemetry. Does not print anything when false.
+     */
     public boolean checkShootPoosible() {
+        telemetry.addLine(":shootin check");
         AprilTagDetection tag = vision.checkTag();
-        return tag != null;
+        if ( tag == null ) {
+            telemetry.addLine("No tag");
+            return false;
+        }
+//        telemetry.addLine("Got April tag");
+//        double targetDistance = getDistanceToTargetMeters(tag);
+//        telemetry.addLine(String.format("Distance to target %.2f height %.2f",
+//                targetDistance, DELTA_Y));
+        return true;
     }
+
 
     public double getDistanceToTargetMeters(AprilTagDetection tag) {
         return tag.rawPose.z * 0.0254;
     }
 
     public double calculateShootingAngle(double targetDistance) {
-        double smallerAngle = Math.atan(1 - Math.sqrt(DELTA_Y / targetDistance));
-        double steeperAngle = Math.atan(1 + Math.sqrt(DELTA_Y / targetDistance));
-        if (steeperAngle < SHOOTER_MAX_ANGLE) return steeperAngle;
+        double smallerAngle = Math.atan(1-Math.sqrt(DELTA_Y/targetDistance));
+//        telemetry.addData("small angle", Math.toDegrees(smallerAngle));
+        double steeperAngle = Math.atan(1+Math.sqrt(DELTA_Y/targetDistance));
+//        telemetry.addData("steeper angle", Math.toDegrees(steeperAngle));
+        if (steeperAngle < SHOOTER_MAX_ANGLE) {
+            return steeperAngle;
+        }
+        double middleAngle = Math.atan(2*DELTA_Y/targetDistance);
+        if (middleAngle < SHOOTER_MAX_ANGLE) {
+            return middleAngle;
+        }
         return smallerAngle;
     }
+
 }
+
