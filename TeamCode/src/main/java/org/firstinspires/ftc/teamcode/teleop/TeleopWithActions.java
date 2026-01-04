@@ -94,7 +94,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 runningActions.add(intake.secondRow());   // start
             }
             if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
-                runningActions.add(intake.firstRow());
+                runningActions.add(intake.firstRow(true));
             }
 
             if (lb) {
