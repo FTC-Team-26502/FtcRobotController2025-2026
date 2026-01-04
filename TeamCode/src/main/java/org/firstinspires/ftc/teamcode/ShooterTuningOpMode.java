@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @Config
 @TeleOp
@@ -26,6 +27,7 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
     public static double shooterPowerLeft = 0.2;
     public static double shooterPowerRight = 0.2;
     public static double intakePower = 1;
+    public static double tickPerRev = 1425.2 / 360;
 
 
     @Override
@@ -36,7 +38,7 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
 
-        initOpMode(false, false, true, false, false, false, false);
+        initOpMode(false, false, true, true, false, false, false);
 
         waitForStart();
         long startMs = System.currentTimeMillis();
@@ -60,19 +62,23 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
                 telemetry.update();
             }
 
+            AprilTagDetection tag = shooter.vision.checkTag();
             telemetry.addData("angle", angleDeg);
-            telemetry.addData("shooter power left", shooterPowerLeft);
-            telemetry.addData("shooter power right", shooterPowerRight);
+            telemetry.addData("dist", shooter.getDistanceToTargetMeters(tag));
+            telemetry.addData("ticksPerRev", tickPerRev);
+            telemetry.addData("shooter velocity left", shooterPowerLeft);
+            telemetry.addData("shooter velocity right", shooterPowerRight);
             telemetry.addData("intake power", intakePower);
             telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
             telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
+            telemetry.addData(" power % offset", Math.abs(shooter.shooterLeft.getVelocity()-shooter.shooterRight.getVelocity())/shooterPowerLeft);
             telemetry.addData("power", shooter.shooterLeft.getPower());
-            shooter.shooterLeft.setPower(shooterPowerLeft);
-            shooter.shooterRight.setPower(shooterPowerRight);
+            shooter.shooterLeft.setVelocity(shooterPowerLeft);
+            shooter.shooterRight.setVelocity(shooterPowerRight);
             shooter.anglerLeft.setPower(0.2);
             shooter.anglerRight.setPower(0.2);
-            shooter.anglerLeft.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
-            shooter.anglerRight.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
+            shooter.anglerLeft.setTargetPosition((int)(angleDeg*tickPerRev));
+            shooter.anglerRight.setTargetPosition((int)(angleDeg*tickPerRev));
             telemetry.update();
 
 
