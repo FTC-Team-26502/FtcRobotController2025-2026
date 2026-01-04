@@ -70,7 +70,7 @@ public class IntakeSystem {
         };
 
     }
-    public Action firstRow() {
+    public Action firstRow(boolean a) {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
