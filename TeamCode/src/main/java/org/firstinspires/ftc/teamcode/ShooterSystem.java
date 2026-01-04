@@ -26,7 +26,7 @@ public class ShooterSystem {
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
     protected VisionSystem vision;
-//    protected final IMU shooterIMU;
+    protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
@@ -39,7 +39,7 @@ public class ShooterSystem {
 
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
         this.vision = vision;
-//        shooterIMU = hw.get(IMU.class, "shooterIMU");
+        shooterIMU = hw.get(IMU.class, "shooterIMU");
         this.manualOverride = manualOverride;
 
         // Set how the IMU is mounted on the robot. Update these to match your physical mounting.
@@ -49,7 +49,7 @@ public class ShooterSystem {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;  // change as needed
         IMU.Parameters params = new IMU.Parameters(
                 new RevHubOrientationOnRobot(logoDir, usbDir));
-//        shooterIMU.initialize(params);
+        shooterIMU.initialize(params);
         anglerLeft = hw.get(DcMotorEx.class, "anglerLeft");
         anglerRight = hw.get(DcMotorEx.class, "anglerRight");
         shooterLeft = hw.get(DcMotorEx.class, "shooterLeft");
@@ -192,20 +192,20 @@ public class ShooterSystem {
         anglerRight.setPower(ANGLER_SPEED);
         anglerLeft.setTargetPosition(ticks);
         anglerRight.setTargetPosition(ticks);
-//        if (usingIMU) {
-//            if (
-//                    Math.abs(
-//                            Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
-//                                    - shootingAngle) < Math.toRadians(3)) {
-//                telemetry.addLine(String.format(
-//                        "shooting angle %.2f imu angle %.2f",
-//                        shootingAngle,
-//                        Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
-//                ));
-//                return Step.Status.SUCCESS;
-//            }
-//            return Step.Status.RUNNING;
-//        } else {
+        if (usingIMU) {
+            if (
+                    Math.abs(
+                            Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
+                                    - shootingAngle) < Math.toRadians(3)) {
+                telemetry.addLine(String.format(
+                        "shooting angle %.2f imu angle %.2f",
+                        shootingAngle,
+                        Math.abs(shooterIMU.getRobotYawPitchRollAngles().getPitch(AngleUnit.RADIANS))
+                ));
+                return Step.Status.SUCCESS;
+            }
+            return Step.Status.RUNNING;
+        } else {
 
             telemetry.addLine("setup angler done");
             telemetry.update();
@@ -215,7 +215,7 @@ public class ShooterSystem {
                 return Step.Status.RUNNING;
             }
 
-//        }
+        }
     }
 
 

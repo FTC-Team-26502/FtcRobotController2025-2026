@@ -24,7 +24,7 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
     public static double rightVelocity = 0.0;
 
     public static double shooterPowerLeft = 0.2;
-    public static double shooterPowerRight = 0;
+    public static double shooterPowerRight = 0.2;
     public static double intakePower = 1;
 
 
@@ -36,7 +36,7 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
 
-        initOpMode(false, false, true, true, false, true, false);
+        initOpMode(false, false, true, false, false, false, false);
 
         waitForStart();
         long startMs = System.currentTimeMillis();
@@ -45,47 +45,40 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
             double time = (System.currentTimeMillis() - startMs) / 1000.0;
 
 
+            // check if angle changed and set the
             if (vision.checkTag() != null) {
                 relativeHeading = vision.checkTag().ftcPose.yaw;
                 distanceToTag = vision.checkTag().ftcPose.z;
+                telemetry.addData("angle", angleDeg);
+                telemetry.addData("shooter power", shooterPower);
+                telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
+                telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
                 telemetry.addData("Tag distance", distanceToTag);
                 telemetry.addData("Facing: ", relativeHeading);
+                shooter.shooterLeft.setPower(shooterPower);
+                shooter.shooterRight.setPower(shooterPower);
                 telemetry.update();
             }
 
-
-            intake.fr.setPower(-1);
-            intake.ml.setPower(1);
-            intake.mr.setPower(1);
-            intake.bl.setPower(1);
-            intake.br.setPower(1);
-//            shooter.shooterLeft.setPower(shooterPowerLeft);
-            shooter.shooterRight.setPower(shooterPowerRight);
-            shooter.anglerLeft.setPower(0.2);
-            shooter.anglerRight.setPower(0.2);
-            shooter.anglerLeft.setTargetPosition((int) (angleDeg * (1 / 360.0) * 537.6));
-            shooter.anglerRight.setTargetPosition((int) (angleDeg * (1 / 360.0) * 537.6));
             telemetry.addData("angle", angleDeg);
             telemetry.addData("shooter power left", shooterPowerLeft);
             telemetry.addData("shooter power right", shooterPowerRight);
             telemetry.addData("intake power", intakePower);
-//            telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
+            telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
             telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
             telemetry.addData("power", shooter.shooterLeft.getPower());
+            shooter.shooterLeft.setPower(shooterPowerLeft);
+            shooter.shooterRight.setPower(shooterPowerRight);
+            shooter.anglerLeft.setPower(0.2);
+            shooter.anglerRight.setPower(0.2);
+            shooter.anglerLeft.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
+            shooter.anglerRight.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
             telemetry.update();
 
 
             // Optional: richer Dashboard packet (graphs, overlays)
             TelemetryPacket packet = new TelemetryPacket();
             packet.put("time", time);
-            packet.put("Facing", relativeHeading);
-            packet.put("Distance", distanceToTag);
-//            packet.put("Shooter power left", shooterPowerLeft);
-            packet.put("Shooter power right", shooterPowerRight);
-            packet.put("Angle: ", angleDeg);
-
-
-
             FtcDashboard.getInstance().sendTelemetryPacket(packet);
             sleep(20);
         }
