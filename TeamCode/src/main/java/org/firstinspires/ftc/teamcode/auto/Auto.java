@@ -30,7 +30,10 @@ public abstract class Auto extends FTC26502OpMode {
     public static int heading = -45;
     public static int angle = 50;
     public static int power = 900;
-    public static int wait = 900;
+    public static int wait = 1;
+    public static int y1 = 60;
+    public static int x1 = -25;
+    public static int heading1 = -45;
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
@@ -38,7 +41,7 @@ public abstract class Auto extends FTC26502OpMode {
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
         // Define start pose (units must match your RR config; inches are common)
-        Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
+        Pose2d startPose = new Pose2d(-56, -56, Math.toRadians(45));
 
         // Initialize drive with start pose
         drive = new MecanumDrive(hardwareMap, startPose);
@@ -48,8 +51,12 @@ public abstract class Auto extends FTC26502OpMode {
                 .splineTo(new Vector2d(x, y), Math.toRadians(heading));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
-
+        TrajectoryActionBuilder pickup1 = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                .splineTo(new Vector2d(x1, y1), Math.toRadians(heading1));
+        // Action that ensures pose is set to end of traj1 (optional)
+        Action closePickup1 = pickup1.endTrajectory().fresh().build();
         Action driveToShootTraj = driveToShoot.build();
+        Action pickup1Traj = pickup1.build();
 
         // Wait for the start command
         waitForStart();
@@ -60,41 +67,44 @@ public abstract class Auto extends FTC26502OpMode {
             new SequentialAction(
                 driveToShootTraj,
                 closeDriveToShoot,
-                new Action() {
-                    @Override
-                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                        telemetry.addLine("prefire");
-                        telemetry.update();
-                        return false;
-                    }
-                },
-                shooter.shootingBottomTriangleAuto(angle, power),
-                new Action() {
-                    @Override
-                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                        telemetry.addLine("Shoot 1 done");
-                        telemetry.update();
-                        return false;
-                    }
-                },
-                new SleepAction(wait),
-                new Action() {
-                    @Override
-                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                        telemetry.addLine("waited");
-                        telemetry.update();
-                        return false;
-                    }
-                },
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("prefire");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
+//                shooter.shootingBottomTriangleAuto(angle, power),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("Shoot 1 done");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
+//                new SleepAction(wait),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("waited");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
                 intake.startIntakeAction(),
+//                new SleepAction(wait),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("intake started");
+//                        return false;
+//                    }
+//                },
+                pickup1Traj,
+                closePickup1,
                 new SleepAction(wait),
-                new Action() {
-                    @Override
-                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                        telemetry.addLine("intake started");
-                        return false;
-                    }
-                },
                 new Action() {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {

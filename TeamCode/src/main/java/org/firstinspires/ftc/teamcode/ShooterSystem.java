@@ -30,7 +30,7 @@ public class ShooterSystem {
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
-    private final double ANGLE_TO_TICKS = (1/360.0) * 537.6;
+    private final double ANGLE_TO_TICKS = (1/360.0) * 1425;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
