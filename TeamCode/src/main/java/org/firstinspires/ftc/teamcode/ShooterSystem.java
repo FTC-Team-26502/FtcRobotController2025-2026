@@ -30,7 +30,7 @@ public class ShooterSystem {
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
-    private final double ANGLE_TO_TICKS = (1/360.0) * 537.6;
+    private final double ANGLE_TO_TICKS = (1/360.0) * 1425.2;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
@@ -269,13 +269,32 @@ public class ShooterSystem {
             public boolean run(@NonNull TelemetryPacket packet) {
                 br.setPower(1);
                 bl.setPower(1);
-                shooterLeft.setPower(1300);
-                shooterRight.setPower(1300);
+                shooterLeft.setPower(1100);
+                shooterRight.setPower(1100);
                 anglerLeft.setPower(0.2);
                 anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
-                anglerRight.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
-                return true;
+                anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                return false;
+            }
+        };
+
+    }
+
+    public Action shootingBottomTriangleAuto(int angle, int power) {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                br.setPower(1);
+                bl.setPower(1);
+                shooterLeft.setVelocity(power);
+                shooterRight.setVelocity(power);
+                anglerLeft.setPower(0.2);
+                anglerRight.setPower(0.2);
+                anglerLeft.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                anglerRight.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                return false;
             }
         };
 
