@@ -94,11 +94,11 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 runningActions.add(intake.secondRow());   // start
             }
             if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
-                runningActions.add(intake.firstRow(true));
+                runningActions.add(intake.firstRow());
             }
 
             if (lb) {
-                runningActions.add(intake.stallDetected());
+                runningActions.add(shooter.stopAction());
             }
 
             if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
@@ -110,12 +110,12 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             if (pressedOnce(x, xPrev)) {
                 telemetry.addLine("x pressed");
                 telemetry.addLine("Can shoot");
-                runningActions.add(shooter.oneShotAction(this));
+                runningActions.add(shooter.shootingTopTriangle());
 
             }
 
             if (pressedOnce(y, yPrev)) {
-                runningActions.add(shooter.stopAction());
+                runningActions.add(shooter.shootingBottomTriangle());
             }
             // TODO add button for manual override
 

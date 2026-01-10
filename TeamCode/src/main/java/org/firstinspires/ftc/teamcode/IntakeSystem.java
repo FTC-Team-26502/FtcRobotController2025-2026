@@ -14,6 +14,9 @@ public class IntakeSystem {
     protected final CRServo fr, ml, mr, bl, br;
     private final Telemetry telemetry;
 
+    private boolean toggleFirst = false;
+    private boolean toggleSecond = false;
+
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
         this.telemetry = telemetry;
         //fl = hw.get(CRServo.class, "inFrontLeft");
@@ -70,11 +73,13 @@ public class IntakeSystem {
         };
 
     }
-    public Action firstRow(boolean a) {
+    public Action firstRow() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if (fr.getPower() == 0) {
+
+                toggleFirst = !toggleFirst;
+                if (toggleFirst) {
                     fr.setPower(-1);
                 } else {
                     fr.setPower(0);
@@ -89,7 +94,8 @@ public class IntakeSystem {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if (ml.getPower() + mr.getPower() == 0) {
+                toggleSecond = !toggleSecond;
+                if (toggleSecond) {
                     ml.setPower(1);
                     mr.setPower(1);
                 } else {

@@ -243,6 +243,44 @@ public class ShooterSystem {
         };
     }
 
+    public Action shootingTopTriangle() {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                br.setPower(1);
+                bl.setPower(1);
+                shooterLeft.setPower(1100);
+                shooterRight.setPower(1100);
+                anglerLeft.setPower(0.2);
+                anglerRight.setPower(0.2);
+                anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                return true;
+            }
+        };
+
+    }
+
+    public Action shootingBottomTriangle() {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                br.setPower(1);
+                bl.setPower(1);
+                shooterLeft.setPower(1300);
+                shooterRight.setPower(1300);
+                anglerLeft.setPower(0.2);
+                anglerRight.setPower(0.2);
+                anglerLeft.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
+                anglerRight.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
+                return true;
+            }
+        };
+
+    }
+
     public Step setupFlywheelStepAction() {
         return new Step() {
             @Override
