@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class IntakeSystem {
 
-    public final CRServo fr, ml, mr, bl, br;
+    protected final CRServo fr, ml, mr, bl, br;
     private final Telemetry telemetry;
 
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
