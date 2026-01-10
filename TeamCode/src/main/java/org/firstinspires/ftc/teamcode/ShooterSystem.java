@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -270,19 +272,20 @@ public class ShooterSystem {
             }
         };
     }
+    public Action shootBottom(){
+        return new SequentialAction(shootingBottomTriangle(), new SleepAction(1), shootAction());
+    }
     public Action shootingBottomTriangle() {
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1100);
-                shooterRight.setPower(1100);
+                shooterLeft.setVelocity(900);
+                shooterRight.setVelocity(900);
                 anglerLeft.setPower(0.2);
                 anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
-                anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                anglerLeft.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
+                anglerRight.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
                 return false;
             }
         };

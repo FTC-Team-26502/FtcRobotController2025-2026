@@ -110,7 +110,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             if (pressedOnce(x, xPrev)) {
                 telemetry.addLine("x pressed");
                 telemetry.addLine("Can shoot");
-                runningActions.add(shooter.shootingTopTriangle());
+                runningActions.add(shooter.shootingBottomTriangle());
 
             }
 
