@@ -77,7 +77,7 @@ public abstract class FTC26502OpMode extends LinearOpMode implements Clock{
              *  check {@link ShooterSystem#calculateShootingAngle(double)}}.
              *  and setting up the shooter to be ready {@link ShooterSystem#shoot()} and setting up the speed
              *  {@link ShooterSystem#setupFlywheels()} and angle {@link ShooterSystem#setupAngler()} </p>*/
-            shooter = new ShooterSystem(hardwareMap, telemetry, vision, false);
+            shooter = new ShooterSystem(hardwareMap, telemetry, vision, drive, false);
         }
         //Init odometry
         if(useOdo) {

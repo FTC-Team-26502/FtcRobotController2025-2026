@@ -26,6 +26,7 @@ public class ShooterSystem {
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
     protected VisionSystem vision;
+    protected MecanumDrive drive;
     protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
@@ -36,9 +37,12 @@ public class ShooterSystem {
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
     protected double shootingAngle = -1.0;
     private boolean usingIMU = false;
+    private double x;
+    protected double turnPower;
 
-    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
+    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
+        this.drive = drive;
         shooterIMU = hw.get(IMU.class, "shooterIMU");
         this.manualOverride = manualOverride;
 
@@ -237,7 +241,35 @@ public class ShooterSystem {
         };
 
     }
-
+    public Action turnToDepot(double heading){
+        return new Action(){
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                x = 1000;
+                turnPower = 0.2;
+                while(Math.abs(x - 1) > 2){
+                    if(vision.checkTag() != null) {
+                        if (x > 1) {
+                            turnPower = 0.2;
+                        } else {
+                            turnPower = -0.2;
+                        }
+                        x = vision.checkTag().rawPose.x;
+                        telemetry.addData("x", x);
+                        telemetry.update();
+                    }else{
+                        if(heading < 45){
+                            turnPower = 0.2;
+                        }else{
+                            turnPower = -0.2;
+                        }
+                    }
+                    drive.setDrivePowers(0, 0, turnPower);
+                }
+                return false;
+            }
+        };
+    }
     public Action shootingBottomTriangle() {
 
         return new Action() {
