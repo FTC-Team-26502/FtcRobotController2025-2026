@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -22,10 +23,14 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  * First version of autonomous code for Decode.
  * Author: dorinamevans@gmail.com
  */
+@Config
 public abstract class Auto extends FTC26502OpMode {
-    int ballDistMultipliers;
-    public int y;
-    public int x;
+    public static int y = 20;
+    public static int x = -20;
+    public static int heading = -45;
+    public static int angle = 50;
+    public static int power = 900;
+    public static int wait = 900;
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
@@ -40,7 +45,7 @@ public abstract class Auto extends FTC26502OpMode {
 
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
-                .splineToConstantHeading(new Vector2d(x, y), Math.toRadians(-45));
+                .splineTo(new Vector2d(x, y), Math.toRadians(heading));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
 
@@ -55,14 +60,41 @@ public abstract class Auto extends FTC26502OpMode {
             new SequentialAction(
                 driveToShootTraj,
                 closeDriveToShoot,
-                shooter.setupFlywheelAction(),
-                shooter.setupAnglerAction(),
-                shooter.shootAction(),
-                new SleepAction(1),
+                new Action() {
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("prefire");
+                        telemetry.update();
+                        return false;
+                    }
+                },
+                shooter.shootingBottomTriangleAuto(angle, power),
+                new Action() {
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("Shoot 1 done");
+                        telemetry.update();
+                        return false;
+                    }
+                },
+                new SleepAction(wait),
+                new Action() {
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("waited");
+                        telemetry.update();
+                        return false;
+                    }
+                },
                 intake.startIntakeAction(),
-                new SleepAction(5),
-                intake.stopIntakeAction(),
-                new SleepAction(5),
+                new SleepAction(wait),
+                new Action() {
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("intake started");
+                        return false;
+                    }
+                },
                 new Action() {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {

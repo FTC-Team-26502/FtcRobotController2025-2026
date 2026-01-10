@@ -186,6 +186,41 @@ public final class MecanumDrive {
 
     }
 
+    public Action turnDegrees(double degrees) {
+        return new TurnAction(
+                new TimeTurn(
+                        localizer.getPose(),
+                        Math.toRadians(degrees),
+                        defaultTurnConstraints
+                )
+        );
+    }
+
+    public void turnDegreesEncoder(
+            double degrees,
+            double power
+    ) {
+        int ticks = (int) (degrees / 360.0 * PARAMS.trackWidthTicks * Math.PI);
+
+        leftFront.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFront.setTargetPosition(ticks);
+        leftBack.setTargetPosition(ticks);
+        rightFront.setTargetPosition(-ticks);
+        rightBack.setTargetPosition(-ticks);
+
+        leftFront.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        setDrivePowers(0, 0, Math.copySign(power, degrees));
+    }
+
+
     public void setDrivePowers(double xPower, double yPower, double turnPower) {
         setDrivePowers(new PoseVelocity2d(
                 new Vector2d(xPower, yPower), turnPower
@@ -413,6 +448,7 @@ public final class MecanumDrive {
             c.strokePolyline(xPoints, yPoints);
         }
     }
+
 
     public final class TurnAction implements Action {
         private final TimeTurn turn;

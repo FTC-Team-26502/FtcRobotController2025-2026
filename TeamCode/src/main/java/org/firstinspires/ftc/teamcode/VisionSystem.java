@@ -162,19 +162,18 @@ public class VisionSystem {
     private AprilTagDetection findDetectionById(int id) {
         List<AprilTagDetection> detections = aprilTag.getDetections();
         for (AprilTagDetection d : detections) {
-            telemetry.addData("tag id", d.id);
             if (d.id == id) return d;
         }
-        telemetry.addLine("Tag not found");
         return null;
     }
 
     public AprilTagDetection checkTag() {
         int tagID = blueAlliance ? 20 : 24;
-        telemetry.addData("tag ID", tagID);
         AprilTagDetection tag20 = findDetectionById(tagID);
+        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
             return tag20;
-
+        }
+        return null;
     }
 
 }
