@@ -42,6 +42,10 @@ public class ShooterSystem {
     private double x;
     protected double turnPower;
 
+    private boolean toggleShootTop = false;
+
+    private boolean toggleShootBottom = false;
+
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
         this.drive = drive;
@@ -230,15 +234,26 @@ public class ShooterSystem {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1100);
-                shooterRight.setPower(1100);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                return true;
+
+                toggleShootTop = !toggleShootTop;
+
+                if (toggleShootTop) {
+                    shooterLeft.setPower(1100);
+                    shooterRight.setPower(1100);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                    anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                    return false;
+                } else {
+                    br.setPower(0);
+                    bl.setPower(0);
+                    shooterLeft.setVelocity(0);
+                    shooterRight.setVelocity(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
             }
         };
 
@@ -280,13 +295,26 @@ public class ShooterSystem {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                shooterLeft.setVelocity(900);
-                shooterRight.setVelocity(900);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
-                anglerRight.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
-                return false;
+
+                toggleShootBottom = !toggleShootBottom;
+
+                if (toggleShootBottom) {
+                    shooterLeft.setVelocity(1000);
+                    shooterRight.setVelocity(1000);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
+                    anglerRight.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
+                    telemetry.addLine("motors powered");
+                    telemetry.update();
+                    return false;
+                } else {
+                    shooterLeft.setVelocity(0);
+                    shooterRight.setVelocity(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
             }
         };
 
@@ -305,6 +333,8 @@ public class ShooterSystem {
                 anglerRight.setPower(0.2);
                 anglerLeft.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
                 anglerRight.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                telemetry.addLine("motors powered");
+                telemetry.update();
                 return false;
             }
         };
@@ -362,8 +392,14 @@ public class ShooterSystem {
     }
 
     public void shoot() {
-        bl.setPower(1);
-        br.setPower(1);
+
+        if (toggleShootBottom) {
+            bl.setPower(1);
+            br.setPower(1);
+        } else {
+            bl.setPower(0);
+            br.setPower(0);
+        }
     }
 
     public Action shootAction(){
@@ -372,6 +408,7 @@ public class ShooterSystem {
             public boolean run(@NonNull TelemetryPacket packet) {
                 shoot();
                 telemetry.addLine("Shooting");
+                telemetry.update();
                 return false;
             }
         };
