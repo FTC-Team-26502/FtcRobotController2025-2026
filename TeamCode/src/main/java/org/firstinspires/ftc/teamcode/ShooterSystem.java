@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -43,11 +44,17 @@ public class ShooterSystem {
     private double x;
     protected double turnPower;
 
+    private static final double P = 0.032;
+    private static final double I = 0.000;
+    private static final double D = 0.0022;
+    private static final double F = 0.00030;
+
     private boolean toggleShootTop = false;
 
     private boolean toggleShootBottom = false;
 
     private boolean toggleHeadingAdjust = false;
+
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
         this.drive = drive;
@@ -81,6 +88,10 @@ public class ShooterSystem {
         anglerRight.setTargetPosition(0);
         anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        PIDFCoefficients pidf = new PIDFCoefficients(P, I, D, F);
+        shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
         anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -160,6 +171,7 @@ public class ShooterSystem {
         double angularSpeed = DEFAULT_FLYWHEEL_SPEED; //ticks/sec
         shootingAngle = SHOOTER_DEFAULT_ANGLE;
         if (!manualOverride) {
+
             AprilTagDetection tag = vision.checkTag();
             if (tag == null) {
                 return Step.Status.FAILURE;
