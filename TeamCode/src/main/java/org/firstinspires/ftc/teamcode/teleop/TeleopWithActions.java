@@ -98,7 +98,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             }
 
             if (lb) {
-                runningActions.add(shooter.stopAction());
+                runningActions.add(shooter.turnToDepot(45));
             }
 
             if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
@@ -110,7 +110,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             if (pressedOnce(x, xPrev)) {
                 telemetry.addLine("x pressed");
                 telemetry.addLine("Can shoot");
-                runningActions.add(shooter.shootingTopTriangle());
+                runningActions.add(shooter.shootBottom());
 
             }
 

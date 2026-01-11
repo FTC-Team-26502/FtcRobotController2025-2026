@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -26,19 +28,27 @@ public class ShooterSystem {
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
     protected VisionSystem vision;
+    protected MecanumDrive drive;
     protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
-    private final double ANGLE_TO_TICKS = (1/360.0) * 537.6;
+    private final double ANGLE_TO_TICKS = (1/360.0) * 1425;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
     protected double shootingAngle = -1.0;
     private boolean usingIMU = false;
+    private double x;
+    protected double turnPower;
 
-    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
+    private boolean toggleShootTop = false;
+
+    private boolean toggleShootBottom = false;
+
+    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
+        this.drive = drive;
         shooterIMU = hw.get(IMU.class, "shooterIMU");
         this.manualOverride = manualOverride;
 
@@ -224,34 +234,87 @@ public class ShooterSystem {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1100);
-                shooterRight.setPower(1100);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                return true;
+
+                toggleShootTop = !toggleShootTop;
+
+                if (toggleShootTop) {
+                    shooterLeft.setPower(1100);
+                    shooterRight.setPower(1100);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                    anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                    return false;
+                } else {
+                    br.setPower(0);
+                    bl.setPower(0);
+                    shooterLeft.setVelocity(0);
+                    shooterRight.setVelocity(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
             }
         };
 
     }
-
+    public Action turnToDepot(double heading){
+        return new Action(){
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                x = 1000;
+                turnPower = 0.2;
+                while(Math.abs(x - 1) > 2){
+                    if(vision.checkTag() != null) {
+                        if (x > 1) {
+                            turnPower = 0.2;
+                        } else {
+                            turnPower = -0.2;
+                        }
+                        x = vision.checkTag().rawPose.x;
+                        telemetry.addData("x", x);
+                        telemetry.update();
+                    }else{
+                        if(heading < 45){
+                            turnPower = 0.2;
+                        }else{
+                            turnPower = -0.2;
+                        }
+                    }
+                    drive.setDrivePowers(0, 0, turnPower);
+                }
+                return false;
+            }
+        };
+    }
+    public Action shootBottom(){
+        return new SequentialAction(shootingBottomTriangle(), new SleepAction(1), shootAction());
+    }
     public Action shootingBottomTriangle() {
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1100);
-                shooterRight.setPower(1100);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
-                anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
-                return false;
+
+                toggleShootBottom = !toggleShootBottom;
+
+                if (toggleShootBottom) {
+                    shooterLeft.setVelocity(1000);
+                    shooterRight.setVelocity(1000);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
+                    anglerRight.setTargetPosition((int) (50 * ANGLE_TO_TICKS));
+                    telemetry.addLine("motors powered");
+                    telemetry.update();
+                    return false;
+                } else {
+                    shooterLeft.setVelocity(0);
+                    shooterRight.setVelocity(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
             }
         };
 
@@ -270,6 +333,8 @@ public class ShooterSystem {
                 anglerRight.setPower(0.2);
                 anglerLeft.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
                 anglerRight.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                telemetry.addLine("motors powered");
+                telemetry.update();
                 return false;
             }
         };
@@ -327,8 +392,14 @@ public class ShooterSystem {
     }
 
     public void shoot() {
-        bl.setPower(1);
-        br.setPower(1);
+
+        if (toggleShootBottom) {
+            bl.setPower(1);
+            br.setPower(1);
+        } else {
+            bl.setPower(0);
+            br.setPower(0);
+        }
     }
 
     public Action shootAction(){
@@ -337,6 +408,7 @@ public class ShooterSystem {
             public boolean run(@NonNull TelemetryPacket packet) {
                 shoot();
                 telemetry.addLine("Shooting");
+                telemetry.update();
                 return false;
             }
         };

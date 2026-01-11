@@ -171,7 +171,7 @@ public class VisionSystem {
     public AprilTagDetection checkTag() {
         int tagID = blueAlliance ? 20 : 24;
         AprilTagDetection tag20 = findDetectionById(tagID);
-        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
+        if (tag20 != null) {
             return tag20;
         }
         return null;
