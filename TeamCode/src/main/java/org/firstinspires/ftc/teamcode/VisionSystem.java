@@ -163,6 +163,7 @@ public class VisionSystem {
         List<AprilTagDetection> detections = aprilTag.getDetections();
         for (AprilTagDetection d : detections) {
             if (d.id == id) return d;
+
         }
         return null;
     }
