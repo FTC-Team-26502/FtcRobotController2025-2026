@@ -24,7 +24,8 @@ public class ShooterSystem {
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
     protected DcMotorEx anglerLeft, anglerRight;
-    protected DcMotorEx shooterLeft, shooterRight;
+    public DcMotorEx shooterLeft;
+    public DcMotorEx shooterRight;
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
     protected VisionSystem vision;
@@ -46,6 +47,7 @@ public class ShooterSystem {
 
     private boolean toggleShootBottom = false;
 
+    private boolean toggleHeadingAdjust = false;
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
         this.drive = drive;
@@ -228,7 +230,9 @@ public class ShooterSystem {
         }
     }
 
-
+    public Action shootTop(){
+        return new SequentialAction(shootingTopTriangle(), new SleepAction(1), shootAction());
+    }
     public Action shootingTopTriangle() {
 
         return new Action() {
@@ -238,18 +242,18 @@ public class ShooterSystem {
                 toggleShootTop = !toggleShootTop;
 
                 if (toggleShootTop) {
-                    shooterLeft.setPower(1100);
-                    shooterRight.setPower(1100);
+                    shooterLeft.setVelocity(1200);
+                    shooterRight.setVelocity(1200);
                     anglerLeft.setPower(0.2);
                     anglerRight.setPower(0.2);
-                    anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                    anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
+                    anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                    anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
                     return false;
+
                 } else {
-                    br.setPower(0);
-                    bl.setPower(0);
-                    shooterLeft.setVelocity(0);
-                    shooterRight.setVelocity(0);
+
+                    shooterLeft.setPower(0);
+                    shooterRight.setPower(0);
                     anglerLeft.setPower(0);
                     anglerRight.setPower(0);
                     return false;
@@ -264,24 +268,49 @@ public class ShooterSystem {
             public boolean run(@NonNull TelemetryPacket packet) {
                 x = 1000;
                 turnPower = 0.2;
-                while(Math.abs(x - 1) > 2){
-                    if(vision.checkTag() != null) {
-                        if (x > 1) {
-                            turnPower = 0.2;
-                        } else {
-                            turnPower = -0.2;
-                        }
+//                while(Math.abs(x - 1) > 2){
+//                    if(vision.checkTag() != null) {
+//                        if (x > 1) {
+//                            turnPower = 0.2;
+//                        } else {
+//                            turnPower = -0.2;
+//                        }
+//                        x = vision.checkTag().rawPose.x;
+//                        telemetry.addData("x", x);
+//                        telemetry.update();
+//                    }else{
+//                        if(heading < 45){
+//                            turnPower = 0.2;
+//                        }else{
+//                            turnPower = -0.2;
+//                        }
+//                    }
+//                    drive.setDrivePowers(0, 0, turnPower);
+//                }
+                turnPower = 0.2;
+                toggleHeadingAdjust = !toggleHeadingAdjust;
+                while (toggleHeadingAdjust) {
+                    if (vision.checkTag() != null) {
                         x = vision.checkTag().rawPose.x;
                         telemetry.addData("x", x);
                         telemetry.update();
-                    }else{
-                        if(heading < 45){
-                            turnPower = 0.2;
-                        }else{
-                            turnPower = -0.2;
+                        if (Math.abs(x) < 0.5) {
+                            toggleHeadingAdjust = !toggleHeadingAdjust;
                         }
+
+                        if (x < 0) {
+
+                            turnPower = -0.2;
+                            drive.setDrivePowers(0, 0, turnPower);
+
+                        }
+
+
+                    } else {
+
+                        drive.setDrivePowers(0, 0, turnPower);
+
                     }
-                    drive.setDrivePowers(0, 0, turnPower);
                 }
                 return false;
             }
@@ -393,7 +422,7 @@ public class ShooterSystem {
 
     public void shoot() {
 
-        if (toggleShootBottom) {
+        if (toggleShootBottom || toggleShootTop) {
             bl.setPower(1);
             br.setPower(1);
         } else {

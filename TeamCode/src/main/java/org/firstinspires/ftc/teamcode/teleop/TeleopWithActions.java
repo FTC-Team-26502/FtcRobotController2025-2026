@@ -97,7 +97,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 runningActions.add(intake.firstRow());
             }
 
-            if (lb) {
+            if (pressedOnce(lb, lbPrev)) {
                 runningActions.add(shooter.turnToDepot(45));
             }
 
@@ -115,7 +115,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             }
 
             if (pressedOnce(y, yPrev)) {
-                runningActions.add(shooter.shootingBottomTriangle());
+                runningActions.add(shooter.shootTop());
             }
             // TODO add button for manual override
 
@@ -140,6 +140,8 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             Pose2d pose = drive.localizer.getPose();
             packet.put("x", pose.position.x);
             packet.put("y", pose.position.y);
+            packet.put("Shooter Left Velocity", shooter.shooterLeft.getVelocity());
+            packet.put("Shooter Right Velocity", shooter.shooterRight.getVelocity());
             packet.put("heading_deg", Math.toDegrees(pose.heading.toDouble()));
             packet.put("running_actions", runningActions.size());
 
