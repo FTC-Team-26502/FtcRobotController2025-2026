@@ -54,7 +54,6 @@ public class ShotterPID extends LinearOpMode {
     private double baseTargetTps = 0.0;
     private double tolTps;
     private double deltaTolTps;
-
     private long boostUntilMs = 0;
     private long readySinceMs = Long.MAX_VALUE;
     private boolean triggerPrev = false;
