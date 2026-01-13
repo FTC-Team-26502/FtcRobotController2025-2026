@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,23 +25,68 @@ public class ShooterSystem {
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
     protected DcMotorEx anglerLeft, anglerRight;
-    protected DcMotorEx shooterLeft, shooterRight;
+    public DcMotorEx shooterLeft;
+    public DcMotorEx shooterRight;
     private DistanceSensor blDist, brDist;
     private CRServo bl, br;
     protected VisionSystem vision;
+    protected MecanumDrive drive;
     protected final IMU shooterIMU;
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
-    private final double ANGLE_TO_TICKS = (1/360.0) * 537.6;
+    private final double ANGLE_TO_TICKS = (1/360.0) * 1425;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
     protected double shootingAngle = -1.0;
     private boolean usingIMU = false;
+    private double x;
+    protected double turnPower;
 
-    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
+    private static final double P = 0.032;
+    private static final double I = 0.000;
+    private static final double D = 0.0022;
+    private static final double F = 0.00030;
+
+
+    private static final double RPM_NEAR = 3600.0;
+    private static final double RPM_12FT = 3900.0; // start here for 10–12 ft; tune ±100–200
+    private static final double RPM_FAR  = 4200.0;
+
+    // Ready-to-fire tolerances (stricter for plastic balls)
+    private static final double READY_TOL_RPM = 70.0; // each wheel within ± this of target
+    private static final double DELTA_TOL_RPM = 25.0; // |L−R| must be ≤ this at feed time
+    private static final long   READY_HOLD_MS = 60;    // must stay in-band this long
+
+
+    // Cross-coupling gain to match left/right speeds
+    private static final double K_VEL = 0.16; // tune 0.14–0.20 for plastic balls
+
+    // Shot recovery boost (plastic balls load the wheels harder)
+    private static final double RECOVERY_BOOST_PCT = 0.06; // +6% target after shot
+    private static final long   RECOVERY_MS        = 200;  // duration
+
+    // Require trigger to release between shots (edge-triggered feed)
+    private static final boolean REQUIRE_TRIGGER_RISE = true;
+    // ========= END USER CONFIG =========
+
+    private double targetRpm = RPM_12FT;
+    private double tolTps = 50;
+    private double deltaTolTps = 25;
+    private long boostUntilMs = 0;
+    private long readySinceMs = Long.MAX_VALUE;
+    private boolean triggerPrev = false;
+
+    private boolean toggleShootTop = false;
+
+    private boolean toggleShootBottom = false;
+
+    private boolean toggleHeadingAdjust = false;
+
+    ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, MecanumDrive drive, boolean manualOverride) {
         this.vision = vision;
+        this.drive = drive;
         shooterIMU = hw.get(IMU.class, "shooterIMU");
         this.manualOverride = manualOverride;
 
@@ -69,6 +117,10 @@ public class ShooterSystem {
         anglerRight.setTargetPosition(0);
         anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+
+        PIDFCoefficients pidf = new PIDFCoefficients(P, I, D, F);
+        shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
         anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -148,6 +200,7 @@ public class ShooterSystem {
         double angularSpeed = DEFAULT_FLYWHEEL_SPEED; //ticks/sec
         shootingAngle = SHOOTER_DEFAULT_ANGLE;
         if (!manualOverride) {
+
             AprilTagDetection tag = vision.checkTag();
             if (tag == null) {
                 return Step.Status.FAILURE;
@@ -218,7 +271,186 @@ public class ShooterSystem {
         }
     }
 
+    public Action shootTop(){
+        return new SequentialAction(shootingTopTriangle(), new SleepAction(1), shootAction());
+    }
 
+    public void shootingPID(double baseTargetTps) {
+
+        double vL = shooterLeft.getVelocity();
+        double vR = shooterRight.getVelocity();
+
+        // Base target with temporary recovery boost
+        long now = System.currentTimeMillis();
+        double targetTps = baseTargetTps;
+        if (now < boostUntilMs) {
+            targetTps *= (1.0 + RECOVERY_BOOST_PCT);
+        }
+
+        // Cross-coupled setpoints to keep L/R matched
+        double eDiff = vL - vR; // positive if left is faster
+        double leftTargetTps  = targetTps - K_VEL * eDiff;
+        double rightTargetTps = targetTps + K_VEL * eDiff;
+
+        shooterLeft.setVelocity(leftTargetTps);
+        shooterRight.setVelocity(rightTargetTps);
+        telemetry.addData("Left target tps", leftTargetTps);
+        telemetry.addData("Right target tps", rightTargetTps);
+        telemetry.addData("Diff", eDiff);
+        telemetry.update();
+
+        // Ready-to-fire gating
+        boolean inBandL = Math.abs(vL - targetTps) <= tolTps;
+        boolean inBandR = Math.abs(vR - targetTps) <= tolTps;
+        boolean matched = Math.abs(vL - vR) <= deltaTolTps;
+        boolean readyBasic = inBandL && inBandR && matched;
+
+        if (readyBasic) {
+            if (readySinceMs == Long.MAX_VALUE) readySinceMs = now;
+        } else {
+            readySinceMs = Long.MAX_VALUE;
+        }
+    }
+    public Action shootingTopTriangle() {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+
+                toggleShootTop = !toggleShootTop;
+
+                if (toggleShootTop) {
+                    shooterLeft.setPower(1);
+                    shooterRight.setPower(1);
+                    shootingPID(1200);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                    anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
+                    return false;
+
+                } else {
+
+                    shooterLeft.setPower(0);
+                    shooterRight.setPower(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
+            }
+        };
+
+    }
+    public Action turnToDepot(double heading){
+        return new Action(){
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                x = 1000;
+                turnPower = 0.2;
+//                while(Math.abs(x - 1) > 2){
+//                    if(vision.checkTag() != null) {
+//                        if (x > 1) {
+//                            turnPower = 0.2;
+//                        } else {
+//                            turnPower = -0.2;
+//                        }
+//                        x = vision.checkTag().rawPose.x;
+//                        telemetry.addData("x", x);
+//                        telemetry.update();
+//                    }else{
+//                        if(heading < 45){
+//                            turnPower = 0.2;
+//                        }else{
+//                            turnPower = -0.2;
+//                        }
+//                    }
+//                    drive.setDrivePowers(0, 0, turnPower);
+//                }
+                turnPower = 0.2;
+                toggleHeadingAdjust = !toggleHeadingAdjust;
+                while (toggleHeadingAdjust) {
+                    if (vision.checkTag() != null) {
+                        x = vision.checkTag().rawPose.x;
+                        telemetry.addData("x", x);
+                        telemetry.update();
+                        if (Math.abs(x) < 0.5) {
+                            toggleHeadingAdjust = !toggleHeadingAdjust;
+                        }
+
+                        if (x < 0) {
+
+                            turnPower = -0.2;
+                            drive.setDrivePowers(0, 0, turnPower);
+
+                        }
+
+
+                    } else {
+
+                        drive.setDrivePowers(0, 0, turnPower);
+
+                    }
+                }
+                return false;
+            }
+        };
+    }
+    public Action shootBottom(){
+        return new SequentialAction(shootingBottomTriangle(), new SleepAction(1), shootAction());
+    }
+    public Action shootingBottomTriangle() {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+
+                toggleShootBottom = !toggleShootBottom;
+
+                if (toggleShootBottom) {
+                    shooterLeft.setPower(1);
+                    shooterRight.setPower(1);
+                    shootingPID(1000);
+                    anglerLeft.setPower(0.2);
+                    anglerRight.setPower(0.2);
+                    anglerLeft.setTargetPosition((int) (45 * ANGLE_TO_TICKS));
+                    anglerRight.setTargetPosition((int) (45 * ANGLE_TO_TICKS));
+                    telemetry.addLine("motors powered");
+                    telemetry.update();
+                    return false;
+                } else {
+                    shooterLeft.setVelocity(0);
+                    shooterRight.setVelocity(0);
+                    anglerLeft.setPower(0);
+                    anglerRight.setPower(0);
+                    return false;
+                }
+            }
+        };
+
+    }
+
+
+
+    public Action shootingBottomTriangleAuto(int angle, int power) {
+
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                br.setPower(1);
+                bl.setPower(1);
+                shooterLeft.setVelocity(power);
+                shooterRight.setVelocity(power);
+                anglerLeft.setPower(0.2);
+                anglerRight.setPower(0.2);
+                anglerLeft.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                anglerRight.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                telemetry.addLine("motors powered");
+                telemetry.update();
+                return false;
+            }
+        };
+
+    }
     public static double selectiveAverage(double value, double a, double b) {
         int count = 1;
         double sum = value;
@@ -241,44 +473,6 @@ public class ShooterSystem {
                 return setupFlywheels() == Step.Status.RUNNING;
             }
         };
-    }
-
-    public Action shootingTopTriangle() {
-
-        return new Action() {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1100);
-                shooterRight.setPower(1100);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                anglerRight.setTargetPosition((int) (45 * (1 / 360.0) * 537.6));
-                return true;
-            }
-        };
-
-    }
-
-    public Action shootingBottomTriangle() {
-
-        return new Action() {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                br.setPower(1);
-                bl.setPower(1);
-                shooterLeft.setPower(1300);
-                shooterRight.setPower(1300);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
-                anglerRight.setTargetPosition((int) (46 * (1 / 360.0) * 537.6));
-                return true;
-            }
-        };
-
     }
 
     public Step setupFlywheelStepAction() {
@@ -309,8 +503,14 @@ public class ShooterSystem {
     }
 
     public void shoot() {
-        bl.setPower(1);
-        br.setPower(1);
+
+        if (toggleShootBottom || toggleShootTop) {
+            bl.setPower(1);
+            br.setPower(1);
+        } else {
+            bl.setPower(0);
+            br.setPower(0);
+        }
     }
 
     public Action shootAction(){
@@ -319,6 +519,7 @@ public class ShooterSystem {
             public boolean run(@NonNull TelemetryPacket packet) {
                 shoot();
                 telemetry.addLine("Shooting");
+                telemetry.update();
                 return false;
             }
         };
@@ -371,7 +572,7 @@ public class ShooterSystem {
         };
     }
 
-//    double calcSpeed() {
+    //    double calcSpeed() {
 //        double d = (blDist.getDistance(DistanceUnit.METER) + brDist.getDistance(DistanceUnit.METER)) / 2;
 //        return (d * Math.sqrt(GRAVITY / (d - VisionSystem.DELTA_Y))) / SPEED_MULTIPLIER;
 //    }
@@ -382,8 +583,8 @@ public class ShooterSystem {
         if (d * Math.tan(shootingAngle) - deltaH > 0) {
             return Math.sqrt(
                     (GRAVITY * d * d) /
-                    (2.0 * Math.pow(Math.cos(shootingAngle), 2) *
-                            (d * Math.tan(shootingAngle) - deltaH)));
+                            (2.0 * Math.pow(Math.cos(shootingAngle), 2) *
+                                    (d * Math.tan(shootingAngle) - deltaH)));
         }  else {
             return -1.0;
         }
@@ -429,4 +630,3 @@ public class ShooterSystem {
     }
 
 }
-
