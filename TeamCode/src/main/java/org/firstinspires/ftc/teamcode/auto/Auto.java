@@ -46,17 +46,44 @@ public abstract class Auto extends FTC26502OpMode {
         // Initialize drive with start pose
         drive = new MecanumDrive(hardwareMap, startPose);
 
+
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
                 .splineTo(new Vector2d(x, y), Math.toRadians(heading));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
-        TrajectoryActionBuilder pickup1 = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
-                .splineTo(new Vector2d(x1, y1), Math.toRadians(heading1));
+
+        TrajectoryActionBuilder firstRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                .splineTo(new Vector2d(-12,-30), Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(-12,-50), Math.toRadians(-90)).intake.stopIntakeAction()
+                .splineToConstantHeading(new Vector2d(-12,-40), Math.toRadians(-90))
+                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        Action closeFirstRowAndShoot = firstRowAndShoot.endTrajectory().fresh().build();
+
+        TrajectoryActionBuilder secondRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                .splineTo(new Vector2d(12,-30), Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(12,-50), Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(12,-30), Math.toRadians(-90))
+                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        Action closeSecondRowAndShoot = secondRowAndShoot.endTrajectory().fresh().build();
+
+        TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                .splineTo(new Vector2d(36,-30), Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(36,-50), Math.toRadians(-90))
+                .splineToConstantHeading(new Vector2d(36,-30), Math.toRadians(-90))
+                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        Action closeThridRowAndShoot = thirdRowAndShoot.endTrajectory().fresh().build();
+
+        TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                        .splineTo(new Vector2d(0,-42),Math.toRadians(0));
+        Action closeLeave = leave.endTrajectory().fresh().build();
+
         // Action that ensures pose is set to end of traj1 (optional)
-        Action closePickup1 = pickup1.endTrajectory().fresh().build();
         Action driveToShootTraj = driveToShoot.build();
-        Action pickup1Traj = pickup1.build();
+        Action firstRowAndShootTraj = firstRowAndShoot.build();
+        Action secondRowAndShootTraj = secondRowAndShoot.build();
+        Action thirdRowAndShootTraj = thirdRowAndShoot.build();
+        Action leaveTraj = leave.build();
 
         // Wait for the start command
         waitForStart();
@@ -67,51 +94,45 @@ public abstract class Auto extends FTC26502OpMode {
             new SequentialAction(
                 driveToShootTraj,
                 closeDriveToShoot,
-//                new Action() {
-//                    @Override
-//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                        telemetry.addLine("prefire");
-//                        telemetry.update();
-//                        return false;
-//                    }
-//                },
-//                shooter.shootingBottomTriangleAuto(angle, power),
-//                new Action() {
-//                    @Override
-//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                        telemetry.addLine("Shoot 1 done");
-//                        telemetry.update();
-//                        return false;
-//                    }
-//                },
-//                new SleepAction(wait),
-//                new Action() {
-//                    @Override
-//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                        telemetry.addLine("waited");
-//                        telemetry.update();
-//                        return false;
-//                    }
-//                },
-                intake.startIntakeAction(),
-//                new SleepAction(wait),
-//                new Action() {
-//                    @Override
-//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                        telemetry.addLine("intake started");
-//                        return false;
-//                    }
-//                },
-                pickup1Traj,
-                closePickup1,
-                new SleepAction(wait),
                 new Action() {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("prefire");
                         telemetry.update();
                         return false;
                     }
-                }
+                },
+                shooter.shootBottom(),
+                new SleepAction(wait),
+                intake.startIntakeAction(),
+                new SleepAction(wait),
+                shooter.shootBottom(),
+                firstRowAndShootTraj,
+                closeFirstRowAndShoot,
+                new SleepAction(wait),
+                shooter.shootBottom(),
+                new SleepAction(wait),
+                intake.startIntakeAction(),
+                new SleepAction(wait),
+                shooter.shootBottom(),
+                secondRowAndShootTraj,
+                closeSecondRowAndShoot,
+                shooter.shootBottom(),
+                new SleepAction(wait),
+                intake.startIntakeAction(),
+                new SleepAction(wait),
+                shooter.shootBottom(),
+                thirdRowAndShootTraj,
+                closeThridRowAndShoot,
+                shooter.shootBottom(),
+                new SleepAction(wait),
+                intake.startIntakeAction(),
+                new SleepAction(wait),
+                shooter.shootBottom(),
+                leaveTraj,
+                closeLeave
+
+
             )
         );
     }
