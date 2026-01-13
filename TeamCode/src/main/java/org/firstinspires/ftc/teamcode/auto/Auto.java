@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -22,10 +23,17 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  * First version of autonomous code for Decode.
  * Author: dorinamevans@gmail.com
  */
+@Config
 public abstract class Auto extends FTC26502OpMode {
-    int ballDistMultipliers;
-    public int y;
-    public int x;
+    public static int y = 20;
+    public static int x = -20;
+    public static int heading = -45;
+    public static int angle = 50;
+    public static int power = 900;
+    public static int wait = 1;
+    public static int y1 = 60;
+    public static int x1 = -25;
+    public static int heading1 = -45;
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
@@ -33,18 +41,22 @@ public abstract class Auto extends FTC26502OpMode {
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
         // Define start pose (units must match your RR config; inches are common)
-        Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(-35));
+        Pose2d startPose = new Pose2d(-56, -56, Math.toRadians(45));
 
         // Initialize drive with start pose
         drive = new MecanumDrive(hardwareMap, startPose);
 
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
-                .splineToConstantHeading(new Vector2d(x, y), Math.toRadians(-45));
+                .splineTo(new Vector2d(x, y), Math.toRadians(heading));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
-
+        TrajectoryActionBuilder pickup1 = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
+                .splineTo(new Vector2d(x1, y1), Math.toRadians(heading1));
+        // Action that ensures pose is set to end of traj1 (optional)
+        Action closePickup1 = pickup1.endTrajectory().fresh().build();
         Action driveToShootTraj = driveToShoot.build();
+        Action pickup1Traj = pickup1.build();
 
         // Wait for the start command
         waitForStart();
@@ -55,14 +67,44 @@ public abstract class Auto extends FTC26502OpMode {
             new SequentialAction(
                 driveToShootTraj,
                 closeDriveToShoot,
-                shooter.setupFlywheelAction(),
-                shooter.setupAnglerAction(),
-                shooter.shootAction(),
-                new SleepAction(1),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("prefire");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
+//                shooter.shootingBottomTriangleAuto(angle, power),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("Shoot 1 done");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
+//                new SleepAction(wait),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("waited");
+//                        telemetry.update();
+//                        return false;
+//                    }
+//                },
                 intake.startIntakeAction(),
-                new SleepAction(5),
-                intake.stopIntakeAction(),
-                new SleepAction(5),
+//                new SleepAction(wait),
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        telemetry.addLine("intake started");
+//                        return false;
+//                    }
+//                },
+                pickup1Traj,
+                closePickup1,
+                new SleepAction(wait),
                 new Action() {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {

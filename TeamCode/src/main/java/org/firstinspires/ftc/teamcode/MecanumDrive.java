@@ -126,6 +126,9 @@ public final class MecanumDrive {
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
 
+    private boolean turning = false;
+    private double targetHeadingDeg = 0.0;
+
 
     public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
@@ -180,6 +183,7 @@ public final class MecanumDrive {
         leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
         rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
         rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag * FRONT_SCALE);
+
     }
 
     public Action turnDegrees(double degrees) {
@@ -221,6 +225,42 @@ public final class MecanumDrive {
         setDrivePowers(new PoseVelocity2d(
                 new Vector2d(xPower, yPower), turnPower
         ));
+    }
+
+    public void startTurnToHeading(double targetDeg) {
+        targetHeadingDeg = AngleUnit.normalizeDegrees(targetDeg);
+        turning = true;
+    }
+
+    public void updateTurnToHeading() {
+        if (!turning) return;
+
+        final double kP = 0.01;
+        final double minPower = 0.08;
+        final double maxPower = 0.4;
+        final double deadbandDeg = 0.5;
+
+        double currentDeg = Math.toDegrees(
+                localizer.getPose().heading.toDouble()
+        );
+
+        double error = AngleUnit.normalizeDegrees(targetHeadingDeg - currentDeg);
+
+        // Close enough → STOP and LATCH
+        if (Math.abs(error) <= deadbandDeg) {
+            setDrivePowers(0, 0, 0);
+            turning = false;   // 🔒 latch here
+            return;
+        }
+
+        double turnPower = kP * error;
+        turnPower = Math.max(-maxPower, Math.min(maxPower, turnPower));
+
+        if (Math.abs(turnPower) < minPower) {
+            turnPower = Math.signum(turnPower) * minPower;
+        }
+
+        setDrivePowers(0, 0, turnPower);
     }
 
     /**

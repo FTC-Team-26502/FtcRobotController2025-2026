@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.shooter;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -6,13 +6,20 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 @TeleOp(name = "Test", group = "Shooter")
 public class ShotterPID extends LinearOpMode {
 
     // ========= USER CONFIG =========
     // Hardware names
-    private static final String LEFT_NAME  = "leftShooter";
-    private static final String RIGHT_NAME = "rightShooter";
+    private static final String LEFT_NAME  = "shooterLeft";
+    private static final String RIGHT_NAME = "shooterRight";
     // Optional feeder example:
     // private static final String FEEDER_NAME = "feeder";
 
@@ -51,7 +58,7 @@ public class ShotterPID extends LinearOpMode {
     // private DcMotorEx feeder;
 
     private double targetRpm = RPM_12FT;
-    private double baseTargetTps = 0.0;
+    private double baseTargetTps = 1000.0;
     private double tolTps;
     private double deltaTolTps;
     private long boostUntilMs = 0;
@@ -92,6 +99,9 @@ public class ShotterPID extends LinearOpMode {
         setTargetRpm(targetRpm);
         tolTps = rpmToTps(READY_TOL_RPM);
         deltaTolTps = rpmToTps(DELTA_TOL_RPM);
+
+        Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
+        telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         telemetry.addLine("Dual Flywheel Shooter (Plastic Balls)");
         telemetry.addData("Preset", presetName(targetRpm));
@@ -166,12 +176,22 @@ public class ShotterPID extends LinearOpMode {
             telemetry.addData("Ready", readyToFire);
             telemetry.addData("In-band ±RPM", READY_TOL_RPM);
             telemetry.addData("ΔRPM limit", DELTA_TOL_RPM);
+            telemetry.addData("left velocity: ", left.getVelocity());
+            telemetry.addData("right velocity: ", right.getVelocity());
             telemetry.update();
+
+            TelemetryPacket packet = new TelemetryPacket();
+            packet.put("Left Velocity", left.getVelocity());
+            packet.put("right Velocity", right.getVelocity());
+            FtcDashboard.getInstance().sendTelemetryPacket(packet);
+            sleep(20);
+
+
         }
 
         // Stop motors
-        left.setPower(0);
-        right.setPower(0);
+//        left.setPower(0);
+//        right.setPower(0);
         // feeder.setPower(0);
     }
 

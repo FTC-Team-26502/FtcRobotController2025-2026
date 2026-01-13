@@ -40,8 +40,6 @@ public class VisionSystem {
     protected boolean blueAlliance;
 
     private final AprilTagProcessor aprilTag;
-
-    MecanumDrive drive;
     private final VisionPortal visionPortal;
 
     public VisionSystem(HardwareMap hw, Telemetry telemetry, boolean blueAlliance) {
@@ -77,34 +75,6 @@ public class VisionSystem {
         telemetryAprilTag();
         telemetry.update();
     }
-
-    public AprilTagDetection checkTag() {
-        int tagID = blueAlliance ? 20 : 24;
-        AprilTagDetection tag20 = findDetectionById(tagID);
-        if (tag20 != null && tag20.robotPose != null && tag20.corners[0].x > 250 && tag20.corners[1].x < 700 && tag20.corners[2].x > 250 && tag20.corners[3].x < 1000) {
-            return tag20;
-        }
-        return null;
-    }
-    public double getHeading() {
-
-        AprilTagDetection tag = checkTag();
-        if (tag != null) {
-
-            return tag.rawPose.x;
-
-        } else {
-
-            return 0;
-
-        }
-
-
-    }
-
-
-
-
 
     public List<AprilTagDetection> getDetections() {
         return aprilTag.getDetections();
@@ -193,11 +163,18 @@ public class VisionSystem {
         List<AprilTagDetection> detections = aprilTag.getDetections();
         for (AprilTagDetection d : detections) {
             if (d.id == id) return d;
+
         }
         return null;
     }
 
-
-
+    public AprilTagDetection checkTag() {
+        int tagID = blueAlliance ? 20 : 24;
+        AprilTagDetection tag20 = findDetectionById(tagID);
+        if (tag20 != null) {
+            return tag20;
+        }
+        return null;
+    }
 
 }

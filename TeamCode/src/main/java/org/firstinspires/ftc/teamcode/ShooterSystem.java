@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -37,35 +36,6 @@ public class ShooterSystem {
     protected final double SHOOTER_MAX_ANGLE = Math.toRadians(55);
     protected double shootingAngle = -1.0;
     private boolean usingIMU = false;
-    private static final double P = 0.032;
-    private static final double I = 0.000;
-    private static final double D = 0.0022;
-    private static final double F = 0.00030; // raise/lower to get <1% steady-state error
-
-    // Cross-coupling gain to match left/right speeds
-    private static final double K_VEL = 0.16; // tune 0.14–0.20 for plastic balls
-
-    private static final double TICKS_PER_REV = 28.0;
-
-    // RPM presets tuned for perforated plastic balls with ~3" flywheels
-    private static final double RPM_NEAR = 3600.0;
-    private static final double RPM_12FT = 3900.0; // start here for 10–12 ft; tune ±100–200
-    private static final double RPM_FAR  = 4200.0;
-
-    // Ready-to-fire tolerances (stricter for plastic balls)
-    private static final double READY_TOL_RPM = 70.0; // each wheel within ± this of target
-    private static final double DELTA_TOL_RPM = 25.0; // |L−R| must be ≤ this at feed time
-    private static final long   READY_HOLD_MS = 60;    // must stay in-band this long
-    private double targetRpm = RPM_12FT;
-    private double baseTargetTps = 0.0;
-    private double tolTps;
-    private double deltaTolTps;
-
-    private static final double RECOVERY_BOOST_PCT = 0.06; // +6% target after shot
-    private static final long   RECOVERY_MS        = 200;  // duration
-    private long boostUntilMs = 0;
-    private long readySinceMs = Long.MAX_VALUE;
-    private boolean triggerPrev = false;
 
     ShooterSystem(HardwareMap hw, Telemetry telemetry, VisionSystem vision, boolean manualOverride) {
         this.vision = vision;
@@ -92,10 +62,6 @@ public class ShooterSystem {
         shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        PIDFCoefficients pidf = new PIDFCoefficients(P, I, D, F);
-        shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
-        shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -181,7 +147,6 @@ public class ShooterSystem {
     public Step.Status setupFlywheels() {
         double angularSpeed = DEFAULT_FLYWHEEL_SPEED; //ticks/sec
         shootingAngle = SHOOTER_DEFAULT_ANGLE;
-
         if (!manualOverride) {
             AprilTagDetection tag = vision.checkTag();
             if (tag == null) {
@@ -206,7 +171,6 @@ public class ShooterSystem {
             telemetry.addLine(String.format("target %2f left %2f right %2f", angularSpeed,
                     shooterLeft.getVelocity(), shooterRight.getVelocity()));
         }
-
         if ( angularSpeed - 10 < shooterLeft.getVelocity() &&
                 angularSpeed -10 < shooterRight.getVelocity()) {
             telemetry.update();
@@ -279,49 +243,6 @@ public class ShooterSystem {
         };
     }
 
-    public Action shootingPID() {
-
-        return new Action() {
-
-            @Override
-            public boolean run (@NonNull TelemetryPacket packet)  {
-                double vL = shooterLeft.getVelocity();
-                double vR = shooterRight.getVelocity();
-
-                // Base target with temporary recovery boost
-                long now = System.currentTimeMillis();
-                double targetTps = baseTargetTps;
-                if (now < boostUntilMs) {
-                    targetTps *= (1.0 + RECOVERY_BOOST_PCT);
-                }
-
-                // Cross-coupled setpoints to keep L/R matched
-                double eDiff = vL - vR; // positive if left is faster
-                double leftTargetTps  = targetTps - K_VEL * eDiff;
-                double rightTargetTps = targetTps + K_VEL * eDiff;
-
-                shooterLeft.setVelocity(leftTargetTps);
-                shooterRight.setVelocity(rightTargetTps);
-
-                targetTps =
-
-                // Ready-to-fire gating
-                boolean inBandL = Math.abs(vL - targetTps) <= tolTps;
-                boolean inBandR = Math.abs(vR - targetTps) <= tolTps;
-                boolean matched = Math.abs(vL - vR) <= deltaTolTps;
-                boolean readyBasic = inBandL && inBandR && matched;
-
-                if (readyBasic) {
-                    if (readySinceMs == Long.MAX_VALUE) readySinceMs = now;
-                } else {
-                    readySinceMs = Long.MAX_VALUE;
-                }
-
-            }
-
-        };
-
-    }
     public Action shootingTopTriangle() {
 
         return new Action() {
@@ -340,6 +261,7 @@ public class ShooterSystem {
         };
 
     }
+
     public Action shootingBottomTriangle() {
 
         return new Action() {
