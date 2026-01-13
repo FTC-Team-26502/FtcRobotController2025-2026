@@ -34,12 +34,18 @@ public abstract class Auto extends FTC26502OpMode {
     public static int y1 = 60;
     public static int x1 = -25;
     public static int heading1 = -45;
+    public static int yMultiplier;
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
 
         telemetry.addLine("Init complete. Adjust variables in Dashboard > Config.");
         telemetry.update();
+        if(blueAlliance){
+            yMultiplier = 1;
+        }else{
+            yMultiplier = -1;
+        }
         // Define start pose (units must match your RR config; inches are common)
         Pose2d startPose = new Pose2d(-56, -56, Math.toRadians(45));
 
@@ -49,33 +55,33 @@ public abstract class Auto extends FTC26502OpMode {
 
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
-                .splineTo(new Vector2d(x, y), Math.toRadians(heading));
+                .splineTo(new Vector2d(x, y*yMultiplier), Math.toRadians(heading*yMultiplier));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder firstRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
-                .splineTo(new Vector2d(-12,-30), Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(-12,-50), Math.toRadians(-90)).intake.stopIntakeAction()
-                .splineToConstantHeading(new Vector2d(-12,-40), Math.toRadians(-90))
-                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        TrajectoryActionBuilder firstRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+                .splineTo(new Vector2d(-12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(-12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(-12,-40*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeFirstRowAndShoot = firstRowAndShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder secondRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
-                .splineTo(new Vector2d(12,-30), Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(12,-50), Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(12,-30), Math.toRadians(-90))
-                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        TrajectoryActionBuilder secondRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+                .splineTo(new Vector2d(12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeSecondRowAndShoot = secondRowAndShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
-                .splineTo(new Vector2d(36,-30), Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(36,-50), Math.toRadians(-90))
-                .splineToConstantHeading(new Vector2d(36,-30), Math.toRadians(-90))
-                .splineTo(new Vector2d(-12,-12),Math.toRadians(45));
+        TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+                .splineTo(new Vector2d(36,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(36,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(36,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeThridRowAndShoot = thirdRowAndShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(x,y, Math.toRadians(heading)))
-                        .splineTo(new Vector2d(0,-42),Math.toRadians(0));
+        TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+                        .splineTo(new Vector2d(0,-42*yMultiplier),Math.toRadians(0*yMultiplier));
         Action closeLeave = leave.endTrajectory().fresh().build();
 
         // Action that ensures pose is set to end of traj1 (optional)
