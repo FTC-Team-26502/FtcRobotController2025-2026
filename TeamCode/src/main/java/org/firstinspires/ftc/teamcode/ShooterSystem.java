@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
@@ -19,7 +20,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-
+@Config
 public class ShooterSystem {
     private static final double DEFAULT_FLYWHEEL_SPEED = 3000; // ticks per second
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
@@ -44,10 +45,11 @@ public class ShooterSystem {
     private double x;
     protected double turnPower;
 
-    private static final double P = 0.032;
-    private static final double I = 0.000;
-    private static final double D = 0.0022;
-    private static final double F = 0.00030;
+    protected static double P = 0.032;
+    protected static double I = 0.000;
+    protected static double D = 0.0022;
+    protected static double FLeft = 11.7;
+    protected static double FRight = 11.7;
 
 
     private static final double RPM_NEAR = 3600.0;
@@ -61,7 +63,8 @@ public class ShooterSystem {
 
 
     // Cross-coupling gain to match left/right speeds
-    private static final double K_VEL = 0.16; // tune 0.14–0.20 for plastic balls
+    private static final double K_VEL_LEFT = 0.16; // tune 0.14–0.20 for plastic ballsspeeds
+    private static final double K_VEL_RIGHT = 0.16; // tune 0.14–0.20 for plastic balls
 
     // Shot recovery boost (plastic balls load the wheels harder)
     private static final double RECOVERY_BOOST_PCT = 0.06; // +6% target after shot
@@ -118,9 +121,10 @@ public class ShooterSystem {
         anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(P, I, D, F);
-        shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
-        shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        PIDFCoefficients pidfLeft = new PIDFCoefficients(P, I, D, FRight);
+        PIDFCoefficients pidfRight = new PIDFCoefficients(P, I, D, FLeft);
+        shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfLeft);
+        shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRight);
 
         anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
         anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -271,14 +275,16 @@ public class ShooterSystem {
         }
     }
 
-    public Action shootTop(){
-        return new SequentialAction(shootingTopTriangle(), new SleepAction(1), shootAction());
+    public Action shootTop(int velocity, double shootingAngle, double waitTime){
+        return new SequentialAction(shootingTopTriangle(velocity,shootingAngle), new SleepAction(waitTime), shootAction());
     }
 
     public void shootingPID(double baseTargetTps) {
 
         double vL = shooterLeft.getVelocity();
         double vR = shooterRight.getVelocity();
+        telemetry.addData("Left Vel",shooterLeft.getVelocity());
+        telemetry.addData("Right Vel",shooterRight.getVelocity());
 
         // Base target with temporary recovery boost
         long now = System.currentTimeMillis();
@@ -289,8 +295,8 @@ public class ShooterSystem {
 
         // Cross-coupled setpoints to keep L/R matched
         double eDiff = vL - vR; // positive if left is faster
-        double leftTargetTps  = targetTps - K_VEL * eDiff;
-        double rightTargetTps = targetTps + K_VEL * eDiff;
+        double leftTargetTps  = targetTps - (K_VEL_LEFT * eDiff);
+        double rightTargetTps = targetTps + (K_VEL_RIGHT * eDiff);
 
         shooterLeft.setVelocity(leftTargetTps);
         shooterRight.setVelocity(rightTargetTps);
@@ -300,8 +306,8 @@ public class ShooterSystem {
         telemetry.update();
 
         // Ready-to-fire gating
-        boolean inBandL = Math.abs(vL - targetTps) <= tolTps;
-        boolean inBandR = Math.abs(vR - targetTps) <= tolTps;
+        boolean inBandL = Math.abs(vL - leftTargetTps) <= tolTps;
+        boolean inBandR = Math.abs(vR - rightTargetTps) <= tolTps;
         boolean matched = Math.abs(vL - vR) <= deltaTolTps;
         boolean readyBasic = inBandL && inBandR && matched;
 
@@ -311,32 +317,21 @@ public class ShooterSystem {
             readySinceMs = Long.MAX_VALUE;
         }
     }
-    public Action shootingTopTriangle() {
+    public Action shootingTopTriangle(int velocity, double shootingAngle) {
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
 
-                toggleShootTop = !toggleShootTop;
 
-                if (toggleShootTop) {
-                    shooterLeft.setPower(1);
-                    shooterRight.setPower(1);
-                    shootingPID(1200);
-                    anglerLeft.setPower(0.2);
-                    anglerRight.setPower(0.2);
-                    anglerLeft.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
-                    anglerRight.setTargetPosition((int) (46 * ANGLE_TO_TICKS));
-                    return false;
-
-                } else {
-
-                    shooterLeft.setPower(0);
-                    shooterRight.setPower(0);
-                    anglerLeft.setPower(0);
-                    anglerRight.setPower(0);
-                    return false;
-                }
+                shooterLeft.setPower(1);
+                shooterRight.setPower(1);
+                shootingPID(velocity);
+                anglerLeft.setPower(0.2);
+                anglerRight.setPower(0.2);
+                anglerLeft.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+                anglerRight.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+                return false;
             }
         };
 
@@ -395,40 +390,34 @@ public class ShooterSystem {
             }
         };
     }
-    public Action shootBottom(){
-        return new SequentialAction(shootingBottomTriangle(), new SleepAction(1), shootAction());
+    public Action shootBottom(int velocity, double shootingAngle, double waitTime){
+        return new SequentialAction(shootingBottomTriangle(velocity, shootingAngle), new SleepAction(waitTime), shootAction());
     }
-    public Action shootingBottomTriangle() {
+    public Action shootingBottomTriangle(int velocity, double shootingAngle) {
 
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
 
-                toggleShootBottom = !toggleShootBottom;
 
-                if (toggleShootBottom) {
-                    shooterLeft.setPower(1);
-                    shooterRight.setPower(1);
-                    shootingPID(1000);
-                    anglerLeft.setPower(0.2);
-                    anglerRight.setPower(0.2);
-                    anglerLeft.setTargetPosition((int) (45 * ANGLE_TO_TICKS));
-                    anglerRight.setTargetPosition((int) (45 * ANGLE_TO_TICKS));
-                    telemetry.addLine("motors powered");
-                    telemetry.update();
-                    return false;
-                } else {
-                    shooterLeft.setVelocity(0);
-                    shooterRight.setVelocity(0);
-                    anglerLeft.setPower(0);
-                    anglerRight.setPower(0);
-                    return false;
-                }
+                bottomShot(velocity,shootingAngle);
+                return false;
             }
         };
 
     }
 
+    public void bottomShot(int velocity, double shootingAngle) {
+        shooterLeft.setPower(1);
+        shooterRight.setPower(1);
+        shootingPID(velocity);
+        anglerLeft.setPower(0.2);
+        anglerRight.setPower(0.2);
+        anglerLeft.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+        anglerRight.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+        telemetry.addLine("motors powered");
+        telemetry.update();
+    }
 
 
     public Action shootingBottomTriangleAuto(int angle, int power) {
@@ -504,13 +493,8 @@ public class ShooterSystem {
 
     public void shoot() {
 
-        if (toggleShootBottom || toggleShootTop) {
-            bl.setPower(1);
-            br.setPower(1);
-        } else {
-            bl.setPower(0);
-            br.setPower(0);
-        }
+        bl.setPower(1);
+        br.setPower(1);
     }
 
     public Action shootAction(){

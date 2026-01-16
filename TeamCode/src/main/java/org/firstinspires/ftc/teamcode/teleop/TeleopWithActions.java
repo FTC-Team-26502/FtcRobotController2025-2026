@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.FTC26502OpMode;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Config
 public abstract class TeleopWithActions  extends FTC26502OpMode {
     private FtcDashboard dash = FtcDashboard.getInstance();
     protected Action driveAction = null;
@@ -26,7 +27,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     private CRServo servo; // example mechanism for InstantAction
 
     // Edge detection for buttons so we only enqueue once per press
-    private boolean aPrev, bPrev, xPrev, yPrev, lbPrev, rbPrev, backPrev, startPrev;
+    private boolean intakeButton1Prev, intakeButton2Prev, closeShootButtonPrev, farShootButtonPrev, headingButtonPrev, rbPrev, backPrev, startPrev;
 
     private boolean manualDriving = true;
 
@@ -34,24 +35,32 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     private boolean intakeFirstRowEnabled = false;
     private boolean shooterEnabled = false;
     private boolean manualOverrideEnabled = false;
+    public static int velocity = 1500;
+    public static double shootingAngle = 43;
+    public static double waitTime = 1.5;
+    private boolean bottomShotToggle = true;
+    private boolean topShotToggle = true;
 
     private static boolean pressedOnce(boolean current, boolean previous) {
         return current && !previous;
     }
 
-    public boolean runOpModeTeleop() throws InterruptedException {
+    public boolean runOpModeTeleop(boolean sagnik) throws InterruptedException {
         waitForStart();
         while (opModeIsActive()) {
 
-            boolean a = gamepad1.a;
-            boolean b = gamepad1.b;
-            boolean x = gamepad1.x;
-            boolean y = gamepad1.y;
-            boolean lb = gamepad1.left_bumper;
-
+            if (sagnik){
+                //sagnik's controls here
+            }else{
+                boolean intakeButton1 = gamepad1.x;
+                boolean intakeButton2 = gamepad1.y;
+                boolean closeShootButton = gamepad1.right_bumper;
+                boolean farShootButton = gamepad1.left_bumper;
+                boolean headingButton = gamepad1.left_trigger > 0.5;
+            }
             TelemetryPacket packet = new TelemetryPacket();
             // 1) Manual driving while actions can run concurrently
-            // Robot-centric: left stick (x,y), right stick (turn)
+            // Robot-centric: left stick (closeShootButton,y), right stick (turn)
             double fwd = -gamepad1.left_stick_y;
             double str = -gamepad1.left_stick_x;
             double turn = -gamepad1.right_stick_x;
@@ -90,14 +99,14 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             drive.updatePoseEstimate();
             // check intake DO NOT chain the controls with else if (makes buttons unreliable and not consistently pressed)
 
-            if (pressedOnce(b, bPrev)) {
+            if (pressedOnce(intakeButton2, intakeButton2Prev)) {
                 runningActions.add(intake.secondRow());   // start
             }
-            if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
+            if (pressedOnce(intakeButton1, intakeButton1Prev)) /* Rubber band intake */ {
                 runningActions.add(intake.firstRow());
             }
 
-            if (pressedOnce(lb, lbPrev)) {
+            if (pressedOnce(headingButton, headingButtonPrev)) {
                 runningActions.add(shooter.turnToDepot(45));
             }
 
@@ -107,23 +116,34 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
-            if (pressedOnce(x, xPrev)) {
-                telemetry.addLine("x pressed");
-                telemetry.addLine("Can shoot");
-                runningActions.add(shooter.shootBottom());
-
+            if (pressedOnce(closeShootButton, closeShootButtonPrev)) {
+                if (bottomShotToggle) {
+                    telemetry.addLine("closeShootButton pressed");
+                    telemetry.addLine("Can shoot");
+                    runningActions.add(shooter.shootBottom(1400, 52, 1));
+                }else{
+                    runningActions.add(shooter.stopAction());
+                }
+                bottomShotToggle = !bottomShotToggle;
             }
 
-            if (pressedOnce(y, yPrev)) {
-                runningActions.add(shooter.shootTop());
+            if (pressedOnce(farShootButton, farShootButtonPrev)) {
+                if (topShotToggle) {
+                    telemetry.addLine("closeShootButton pressed");
+                    telemetry.addLine("Can shoot");
+                    runningActions.add(shooter.shootTop(velocity,shootingAngle,waitTime));
+                }else{
+                    runningActions.add(shooter.stopAction());
+                }
+                topShotToggle = !topShotToggle;
             }
             // TODO add button for manual override
 
-            aPrev = a;
-            bPrev = b;
-            xPrev = x;
-            yPrev = y;
-            lbPrev = lb;
+            intakeButton1Prev = intakeButton1;
+            intakeButton2Prev = intakeButton2;
+            closeShootButtonPrev = closeShootButton;
+            farShootButtonPrev = farShootButton;
+            headingButtonPrev = headingButton;
 
 
             // 3) Advance running actions
@@ -138,7 +158,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
 
             // 4) Dashboard telemetry
             Pose2d pose = drive.localizer.getPose();
-            packet.put("x", pose.position.x);
+            packet.put("closeShootButton", pose.position.x);
             packet.put("y", pose.position.y);
             packet.put("Shooter Left Velocity", shooter.shooterLeft.getVelocity());
             packet.put("Shooter Right Velocity", shooter.shooterRight.getVelocity());

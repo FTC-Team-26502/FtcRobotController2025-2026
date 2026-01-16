@@ -5,6 +5,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 @Config
@@ -25,6 +27,11 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
     public static double shooterPowerLeft = 0.2;
     public static double shooterPowerRight = 0.2;
     public static double intakePower = 1;
+    public static double P = 0.032;
+    public static double I = 0.000;
+    public static double D = 0.0022;
+    public static double FLeft = 11.7;
+    public static double FRight = 11.7;
 
 
     @Override
@@ -39,39 +46,13 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
 
         waitForStart();
         long startMs = System.currentTimeMillis();
-
         while (opModeIsActive()) {
             double time = (System.currentTimeMillis() - startMs) / 1000.0;
-
-
-            // check if angle changed and set the
-            if (vision.checkTag() != null) {
-                relativeHeading = vision.checkTag().ftcPose.yaw;
-                distanceToTag = vision.checkTag().ftcPose.z;
-                telemetry.addData("angle", angleDeg);
-                telemetry.addData("shooter power", shooterPower);
-                telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
-                telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
-                telemetry.addData("Tag distance", distanceToTag);
-                telemetry.addData("Facing: ", relativeHeading);
-                shooter.shooterLeft.setPower(shooterPower);
-                shooter.shooterRight.setPower(shooterPower);
-                telemetry.update();
-            }
-
-            telemetry.addData("angle", angleDeg);
-            telemetry.addData("shooter power left", shooterPowerLeft);
-            telemetry.addData("shooter power right", shooterPowerRight);
-            telemetry.addData("intake power", intakePower);
-            telemetry.addData("left velocity", shooter.shooterLeft.getVelocity());
-            telemetry.addData("right velocity", shooter.shooterRight.getVelocity());
-            telemetry.addData("power", shooter.shooterLeft.getPower());
-//            shooter.shooterLeft.setPower(shooterPowerLeft);
-            shooter.shooterRight.setPower(shooterPowerRight);
-            shooter.anglerLeft.setPower(0.2);
-            shooter.anglerRight.setPower(0.2);
-            shooter.anglerLeft.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
-            shooter.anglerRight.setTargetPosition((int)(angleDeg*(1/360.0) * 537.6));
+            PIDFCoefficients pidfLeft = new PIDFCoefficients(P, I, D, FRight);
+            PIDFCoefficients pidfRight = new PIDFCoefficients(P, I, D, FLeft);
+            shooter.shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfLeft);
+            shooter.shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRight);
+            shooter.bottomShot(1000,56.0);
             telemetry.update();
 
 
