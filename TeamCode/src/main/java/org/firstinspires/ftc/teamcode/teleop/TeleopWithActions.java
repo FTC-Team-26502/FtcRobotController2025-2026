@@ -48,53 +48,22 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     public boolean runOpModeTeleop(boolean sagnik) throws InterruptedException {
         waitForStart();
         while (opModeIsActive()) {
-
+            boolean intakeButton1 = gamepad1.x;
+            boolean intakeButton2 = gamepad1.y;
+            boolean closeShootButton = gamepad1.right_bumper;
+            boolean farShootButton = gamepad1.left_bumper;
+            boolean headingButton = (gamepad1.left_trigger > 0.2);
             if (sagnik){
-                //sagnik's controls here
-            }else{
-                boolean intakeButton1 = gamepad1.x;
-                boolean intakeButton2 = gamepad1.y;
-                boolean closeShootButton = gamepad1.right_bumper;
-                boolean farShootButton = gamepad1.left_bumper;
-                boolean headingButton = gamepad1.left_trigger > 0.5;
+                 intakeButton1 = gamepad1.a;
+                 intakeButton2 = gamepad1.b;
+                 closeShootButton = gamepad1.x;
+                 farShootButton = gamepad1.y;
+                 headingButton = gamepad1.left_bumper;
             }
             TelemetryPacket packet = new TelemetryPacket();
             // 1) Manual driving while actions can run concurrently
             // Robot-centric: left stick (closeShootButton,y), right stick (turn)
-            double fwd = -gamepad1.left_stick_y;
-            double str = -gamepad1.left_stick_x;
-            double turn = -gamepad1.right_stick_x;
-            if (manualDriving) {
-                //        // Optional slow modes with triggers
-                //        double transScale = 1.0 - 0.6 * gamepad1.right_trigger;
-                //        double rotScale   = 1.0 - 0.6 * gamepad1.left_trigger;
-                //        fwd *= transScale;
-                //        str *= transScale;
-                //        turn *= rotScale;
-                drive.setDrivePowers(fwd, str, turn);
 
-            } else {
-                // patching trajectories
-                // Advance any running action
-                if (driveAction != null && !driveAction.run(packet)) {
-                    driveAction = null;
-                }
-                // Periodic replan from sticks
-                long now = System.nanoTime();
-                if ((now - lastPlanNs) * 1e-9 >= REPLAN_S) {
-                    try {
-                        Action micro = drive.buildDriverNudgeAction(str, fwd, turn);
-                        lastPlanNs = now;
-                        if (micro != null) {
-                            driveAction = micro; // replace for responsiveness
-                        }
-                    } catch (Exception exception) {
-                        // any path violations will not stop the loop
-                        driveAction = null;
-                        drive.setDrivePowers(str, fwd, turn);
-                    }
-                }
-            }
             // Keep localization fresh
             drive.updatePoseEstimate();
             // check intake DO NOT chain the controls with else if (makes buttons unreliable and not consistently pressed)
@@ -106,8 +75,21 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 runningActions.add(intake.firstRow());
             }
 
-            if (pressedOnce(headingButton, headingButtonPrev)) {
-                runningActions.add(shooter.turnToDepot(45));
+            if (pressedOnce(headingButton,headingButtonPrev)) {
+                runningActions.add(shooter.turnToDepot(1));
+            }else{
+                double fwd = -gamepad1.left_stick_y;
+                double str = -gamepad1.left_stick_x;
+                double turn = -gamepad1.right_stick_x;
+                if (manualDriving) {
+                    //        // Optional slow modes with triggers
+                    //        double transScale = 1.0 - 0.6 * gamepad1.right_trigger;
+                    //        double rotScale   = 1.0 - 0.6 * gamepad1.left_trigger;
+                    //        fwd *= transScale;
+                    //        str *= transScale;
+                    //        turn *= rotScale;
+                    drive.setDrivePowers(fwd, str, turn);
+                }
             }
 
             if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {

@@ -340,52 +340,25 @@ public class ShooterSystem {
         return new Action(){
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                x = 1000;
-                turnPower = 0.2;
-//                while(Math.abs(x - 1) > 2){
-//                    if(vision.checkTag() != null) {
-//                        if (x > 1) {
-//                            turnPower = 0.2;
-//                        } else {
-//                            turnPower = -0.2;
-//                        }
-//                        x = vision.checkTag().rawPose.x;
-//                        telemetry.addData("x", x);
-//                        telemetry.update();
-//                    }else{
-//                        if(heading < 45){
-//                            turnPower = 0.2;
-//                        }else{
-//                            turnPower = -0.2;
-//                        }
-//                    }
-//                    drive.setDrivePowers(0, 0, turnPower);
-//                }
-                turnPower = 0.2;
-                toggleHeadingAdjust = !toggleHeadingAdjust;
-                while (toggleHeadingAdjust) {
-                    if (vision.checkTag() != null) {
-                        x = vision.checkTag().rawPose.x;
-                        telemetry.addData("x", x);
-                        telemetry.update();
-                        if (Math.abs(x) < 0.5) {
-                            toggleHeadingAdjust = !toggleHeadingAdjust;
-                        }
+                turnPower = 0.3;
 
-                        if (x < 0) {
-
-                            turnPower = -0.2;
-                            drive.setDrivePowers(0, 0, turnPower);
-
-                        }
-
-
+                if (vision.checkTag() != null) {
+                    x = vision.checkTag().rawPose.x;
+                    if (x < heading) {
+                        turnPower = -0.3;
                     } else {
-
-                        drive.setDrivePowers(0, 0, turnPower);
-
+                        turnPower = 0.3;
+                    }
+                    drive.setDrivePowers(0, 0, turnPower);
+                    telemetry.addData("x", x);
+                    if (Math.abs(x - heading) < 20) {
+                        return false;
+                    }else{
+                        return true;
                     }
                 }
+                telemetry.addData("i am here", "realy ");
+                telemetry.update();
                 return false;
             }
         };
