@@ -25,15 +25,15 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  */
 @Config
 public abstract class Auto extends FTC26502OpMode {
-    public static int y = 20;
-    public static int x = -20;
-    public static int heading = -45;
+    public static int y = -10;
+    public static int x = -10;
+    public static int heading = 45;
     public static int angle = 50;
-    public static int power = 900;
+    public static int power = 1000;
     public static int wait = 1;
     public static int y1 = 60;
-    public static int x1 = -25;
-    public static int heading1 = -45;
+    public static int x1 = 12;
+    public static int heading1 = 45;
     public static int yMultiplier;
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
@@ -60,23 +60,23 @@ public abstract class Auto extends FTC26502OpMode {
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
 
         TrajectoryActionBuilder firstRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
-                .splineTo(new Vector2d(-12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(-12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(-12,-40*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineTo(new Vector2d(-12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(-12,-80*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(-12,-60*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeFirstRowAndShoot = firstRowAndShoot.endTrajectory().fresh().build();
 
         TrajectoryActionBuilder secondRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
-                .splineTo(new Vector2d(12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(12,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineTo(new Vector2d(x1,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(x1,-80*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(x1,-60*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeSecondRowAndShoot = secondRowAndShoot.endTrajectory().fresh().build();
 
         TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
                 .splineTo(new Vector2d(36,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(36,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(36,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(36,-80*yMultiplier), Math.toRadians(-90*yMultiplier))
+                .splineToConstantHeading(new Vector2d(36,-60*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeThridRowAndShoot = thirdRowAndShoot.endTrajectory().fresh().build();
 
@@ -108,35 +108,53 @@ public abstract class Auto extends FTC26502OpMode {
                                 return false;
                             }
                         },
-//                        shooter.shootBottom(),
+                        shooter.shootBottom(power, angle, 1),
                         new SleepAction(wait),
                         intake.startIntakeAction(),
-                        new SleepAction(wait),
-//                        shooter.shootBottom(),
+                        new SleepAction(3),//,
+                        shooter.stopAction(),
                         firstRowAndShootTraj,
                         closeFirstRowAndShoot,
-                        new SleepAction(wait),
-//                        shooter.shootBottom(),
+                        intake.stopIntakeAction(),
+                        shooter.shootBottom(power, angle, 1),
                         new SleepAction(wait),
                         intake.startIntakeAction(),
-                        new SleepAction(wait),
-//                        shooter.shootBottom(),
+                        new SleepAction(3),//,
+                        shooter.stopAction(),
                         secondRowAndShootTraj,
                         closeSecondRowAndShoot,
-//                        shooter.shootBottom(),
+                        intake.stopIntakeAction(),
+                        shooter.shootBottom(power, angle, 1),
                         new SleepAction(wait),
                         intake.startIntakeAction(),
-                        new SleepAction(wait),
-//                        shooter.shootBottom(),
                         thirdRowAndShootTraj,
                         closeThridRowAndShoot,
-//                        shooter.shootBottom(),
-                        new SleepAction(wait),
-                        intake.startIntakeAction(),
-                        new SleepAction(wait),
-//                        shooter.shootBottom(),
-                        leaveTraj,
-                        closeLeave
+                        intake.stopIntakeAction()
+////                        shooter.shootBottom(),
+//                        firstRowAndShootTraj,
+//                        closeFirstRowAndShoot,
+//                        new SleepAction(wait),
+////                        shooter.shootBottom(),
+//                        new SleepAction(wait),
+//                        intake.startIntakeAction(),
+//                        new SleepAction(wait),
+////                        shooter.shootBottom(),
+//                        secondRowAndShootTraj,
+//                        closeSecondRowAndShoot,
+////                        shooter.shootBottom(),
+//                        new SleepAction(wait),
+//                        intake.startIntakeAction(),
+//                        new SleepAction(wait),
+////                        shooter.shootBottom(),
+//                        thirdRowAndShootTraj,
+//                        closeThridRowAndShoot,
+////                        shooter.shootBottom(),
+//                        new SleepAction(wait),
+//                        intake.startIntakeAction(),
+//                        new SleepAction(wait),
+////                        shooter.shootBottom(),
+//                        leaveTraj,
+//                        closeLeave
 
 
                 )

@@ -102,7 +102,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 if (bottomShotToggle) {
                     telemetry.addLine("closeShootButton pressed");
                     telemetry.addLine("Can shoot");
-                    runningActions.add(shooter.shootBottom(1400, 52, 1));
+                    runningActions.add(shooter.shootBottom(1400, 50, 1));
                 }else{
                     runningActions.add(shooter.stopAction());
                 }
