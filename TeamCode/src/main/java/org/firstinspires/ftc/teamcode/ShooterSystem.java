@@ -25,7 +25,7 @@ public class ShooterSystem {
     private static final double DEFAULT_FLYWHEEL_SPEED = 3000; // ticks per second
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
-    protected DcMotorEx anglerLeft, anglerRight;
+    public DcMotorEx anglerLeft, anglerRight;
     public DcMotorEx shooterLeft;
     public DcMotorEx shooterRight;
     private DistanceSensor blDist, brDist;
@@ -199,7 +199,16 @@ public class ShooterSystem {
                 stopStepAction()
         );
     }
-
+    public Action dropShooter(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                anglerLeft.setTargetPosition(0);
+                anglerRight.setTargetPosition(0);
+                return false;
+            }
+        };
+    }
     public Step.Status setupFlywheels() {
         double angularSpeed = DEFAULT_FLYWHEEL_SPEED; //ticks/sec
         shootingAngle = SHOOTER_DEFAULT_ANGLE;

@@ -35,8 +35,8 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     private boolean intakeFirstRowEnabled = false;
     private boolean shooterEnabled = false;
     private boolean manualOverrideEnabled = false;
-    public static int velocity = 1500;
-    public static double shootingAngle = 43;
+    public static int velocity = 1900;
+    public static double shootingAngle = 52;
     public static double waitTime = 1.5;
     private boolean bottomShotToggle = true;
     private boolean topShotToggle = true;
