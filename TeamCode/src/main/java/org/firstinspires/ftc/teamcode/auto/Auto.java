@@ -18,6 +18,7 @@ import com.acmerobotics.roadrunner.Pose2d;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.FTC26502OpMode;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * First version of autonomous code for Decode.
@@ -36,6 +37,9 @@ public abstract class Auto extends FTC26502OpMode {
     public static int x2 = 56;
     public static int heading1 = 45;
     public static int yMultiplier;
+
+    protected ElapsedTime runtime = new ElapsedTime();
+
     public void runOpModeAuto() throws InterruptedException {
         Telemetry dashboardTelemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry = new MultipleTelemetry(telemetry, dashboardTelemetry);
@@ -52,7 +56,6 @@ public abstract class Auto extends FTC26502OpMode {
 
         // Initialize drive with start pose
         drive = new MecanumDrive(hardwareMap, startPose);
-
 
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
@@ -94,45 +97,45 @@ public abstract class Auto extends FTC26502OpMode {
 
         // Wait for the start command
         waitForStart();
+        runtime.reset();
         if (isStopRequested()) return;
 
-        // Run everything sequentially
-        Actions.runBlocking(
-                new SequentialAction(
-                        driveToShootTraj,
-                        closeDriveToShoot,
+        Action autoAction = new SequentialAction(
+                new StoppableAction(driveToShootTraj),
+                new StoppableAction(closeDriveToShoot),
+                new StoppableAction(
                         new Action() {
-                            @Override
-                            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                                telemetry.addLine("prefire");
-                                telemetry.update();
-                                return false;
-                            }
-                        },
-                        shooter.shootBottom(power, angle, 1),
-                        new SleepAction(wait),
-                        intake.startIntakeAction(),
-                        new SleepAction(3),//,
-                        shooter.stopAction(),
-                        firstRowAndShootTraj,
-                        closeFirstRowAndShoot,
-                        shooter.dropShooter(),
-                        intake.stopIntakeAction(),
-                        shooter.shootBottom(power, angle, 1),
-                        new SleepAction(wait),
-                        intake.startIntakeAction(),
-                        new SleepAction(3),//,
-                        shooter.stopAction(),
-                        secondRowAndShootTraj,
-                        closeSecondRowAndShoot,
-                        intake.stopIntakeAction(),
-                        shooter.shootBottom(power, angle, 1),
-                        new SleepAction(wait),
-                        intake.startIntakeAction(),
-                        new SleepAction(5),
-                        shooter.stopAction(),
-                        leaveTraj,
-                        closeLeave
+                    @Override
+                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                        telemetry.addLine("prefire");
+                        telemetry.update();
+                        return false;
+                    }
+                }),
+                new StoppableAction( shooter.shootBottom(power, angle, 1)),
+                new StoppableAction(new SleepAction(wait)),
+                new StoppableAction(intake.startIntakeAction()),
+                new StoppableAction(new SleepAction(3)),//,
+                new StoppableAction(shooter.stopAction()),
+                new StoppableAction(firstRowAndShootTraj),
+                new StoppableAction(closeFirstRowAndShoot),
+                new StoppableAction(shooter.dropShooter()),
+                new StoppableAction(intake.stopIntakeAction()),
+                new StoppableAction(shooter.shootBottom(power, angle, 1)),
+                new StoppableAction(new SleepAction(wait)),
+                new StoppableAction(intake.startIntakeAction()),
+                new StoppableAction(new SleepAction(3)),//,
+                new StoppableAction(shooter.stopAction()),
+                new StoppableAction(secondRowAndShootTraj),
+                new StoppableAction(closeSecondRowAndShoot),
+                new StoppableAction(intake.stopIntakeAction()),
+                new StoppableAction(shooter.shootBottom(power, angle, 1)),
+                new StoppableAction(new SleepAction(wait)),
+                new StoppableAction(intake.startIntakeAction()),
+                new StoppableAction(new SleepAction(5)),
+                new StoppableAction(shooter.stopAction()),
+                new StoppableAction(leaveTraj),
+                new StoppableAction(closeLeave)
 //                        thirdRowAndShootTraj,
 //                        closeThridRowAndShoot,
 //                        intake.stopIntakeAction()
@@ -163,7 +166,37 @@ public abstract class Auto extends FTC26502OpMode {
 //                        closeLeave
 
 
-                )
         );
+
+        try {
+            // Run everything sequentially
+            Actions.runBlocking(autoAction);
+        } finally {
+            shooter.shutdown();
+        }
+
     }
+
+    class StoppableAction implements Action {
+
+        public Action inner;
+
+        StoppableAction( Action inner) {
+            this.inner = inner;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if ( runtime.milliseconds() > 24000 || !opModeIsActive() || isStopRequested() ) {
+                return false;
+            }
+            if ( inner instanceof SleepAction ) {
+                if ( 25 - runtime.seconds() - ((SleepAction)inner).getDt() <= 1 ) {
+                    return false;
+                }
+            }
+            return inner.run(telemetryPacket);
+        }
+    }
+
 }

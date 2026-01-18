@@ -514,6 +514,18 @@ public class ShooterSystem {
         telemetry.addLine("Shotting stoped 1");
     }
 
+    public void shutdown() {
+        anglerLeft.setPower(0.8);
+        anglerRight.setPower(0.8);
+
+        anglerRight.setTargetPosition(0);
+        anglerLeft.setTargetPosition(0);
+
+        anglerLeft.setPower(0);
+        anglerRight.setPower(0);
+
+    }
+
     public Action stopAction(){
 
         return new Action() {
