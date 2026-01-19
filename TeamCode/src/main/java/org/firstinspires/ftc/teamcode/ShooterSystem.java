@@ -515,8 +515,8 @@ public class ShooterSystem {
     }
 
     public void shutdown() {
-        anglerLeft.setPower(0.8);
-        anglerRight.setPower(0.8);
+        anglerLeft.setPower(0.2);
+        anglerRight.setPower(0.2);
 
         anglerRight.setTargetPosition(0);
         anglerLeft.setTargetPosition(0);

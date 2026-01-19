@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -90,6 +92,12 @@ public class IntakeSystem {
         };
     }
 
+    public Action ball1Collected(){
+        return new SequentialAction(startSecondRow(), new SleepAction(1), stopSecondRow()) ;
+    }
+    public Action feedShooter(){
+        return new SequentialAction(new SleepAction(1),startSecondRow(), new SleepAction(1), startIntakeAction());
+    }
     public Action secondRow() {
         return new Action() {
             @Override
@@ -106,6 +114,27 @@ public class IntakeSystem {
             }
         };
 
+    }
+    public Action startSecondRow(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                ml.setPower(1);
+                mr.setPower(1);
+                return false;
+            }
+        };
+    }
+
+    public Action stopSecondRow(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                ml.setPower(0);
+                mr.setPower(0);
+                return false;
+            }
+        };
     }
 
 }

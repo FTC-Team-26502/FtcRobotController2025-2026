@@ -98,11 +98,15 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
+            if(sensors.isPurpleBall() || sensors.isGreenBall()){
+                runningActions.add(intake.ball1Collected());
+            }
             if (pressedOnce(closeShootButton, closeShootButtonPrev)) {
                 if (bottomShotToggle) {
                     telemetry.addLine("closeShootButton pressed");
                     telemetry.addLine("Can shoot");
                     runningActions.add(shooter.shootBottom(1400, 50, 1));
+                    runningActions.add(intake.feedShooter());
                 }else{
                     runningActions.add(shooter.stopAction());
                 }
