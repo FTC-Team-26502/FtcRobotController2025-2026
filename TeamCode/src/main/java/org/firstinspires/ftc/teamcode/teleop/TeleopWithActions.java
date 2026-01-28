@@ -35,9 +35,10 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
     private boolean intakeFirstRowEnabled = false;
     private boolean shooterEnabled = false;
     private boolean manualOverrideEnabled = false;
-    public static int velocity = 1900;
+    public static int velocity = 2150;
     public static double shootingAngle = 52;
     public static double waitTime = 1.5;
+    public static double waitTimeIntake = 2;
     private boolean bottomShotToggle = true;
     private boolean topShotToggle = true;
 
@@ -98,7 +99,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
-            if(sensors.isPurpleBall() || sensors.isGreenBall()){
+            if(sensors.isPurpleBall() || sensors.isGreenBall() && shooter.shooterLeft.getVelocity()<1000){
                 runningActions.add(intake.ball1Collected());
             }
             if (pressedOnce(closeShootButton, closeShootButtonPrev)) {
@@ -106,7 +107,6 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                     telemetry.addLine("closeShootButton pressed");
                     telemetry.addLine("Can shoot");
                     runningActions.add(shooter.shootBottom(1400, 50, 1));
-                    runningActions.add(intake.feedShooter());
                 }else{
                     runningActions.add(shooter.stopAction());
                 }

@@ -25,13 +25,13 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 @Config
 public abstract class Auto2 extends FTC26502OpMode {
     public static int y = -10;
-    public static int x = -10;
+    public static int x = 42;
     public static int heading = 45;
     public static int angle = 50;
     public static int power = 1350;
     public static int wait = 1;
-    public static int y1 = 72;
-    public static int x1 = 18;
+    public static int y1 = 56;
+    public static int x1 = -42;
     public static int x2 = 56;
     public static int heading1 = 45;
     public static int yMultiplier;
@@ -47,7 +47,7 @@ public abstract class Auto2 extends FTC26502OpMode {
             yMultiplier = -1;
         }
         // Define start pose (units must match your RR config; inches are common)
-        Pose2d startPose = new Pose2d(-56, 56, Math.toRadians(90));
+        Pose2d startPose = new Pose2d(56 ,-10, Math.toRadians(heading1));
 
         // Initialize drive with start pose
         drive = new MecanumDrive(hardwareMap, startPose);
@@ -55,23 +55,30 @@ public abstract class Auto2 extends FTC26502OpMode {
 
         // Build first trajectory from the start pose
         TrajectoryActionBuilder driveToShoot = drive.actionBuilder(startPose)
-                .splineTo(new Vector2d(x, y*yMultiplier), Math.toRadians(heading*yMultiplier));
+                .lineToX(x)
+                .turnTo(Math.toRadians(heading*yMultiplier));
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
+        TrajectoryActionBuilder driveToShoot2ndTime = drive.actionBuilder(startPose)
+                .splineTo(new Vector2d(x,-10),Math.toRadians(heading))
+                .turnTo(Math.toRadians(heading*yMultiplier));
+        // Action that ensures pose is set to end of traj1 (optional)
+        Action closeDriveToShoot2ndTime = driveToShoot2ndTime.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+        TrajectoryActionBuilder thirdRowAndShoot = drive.actionBuilder(new Pose2d(56+x,-10, Math.toRadians(heading)))
                 .splineTo(new Vector2d(x2,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineToConstantHeading(new Vector2d(x2,-70*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineToConstantHeading(new Vector2d(x2,-60*yMultiplier), Math.toRadians(-90*yMultiplier))
                 .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
         Action closeThridRowAndShoot = thirdRowAndShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(-56,56, Math.toRadians(90))      )
-                .splineToConstantHeading(new Vector2d(-42,56),Math.toRadians(90));
+        TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(56+x,-10, Math.toRadians(90))      )
+                .splineToConstantHeading(new Vector2d(x1,y1),Math.toRadians(90));
         Action closeLeave = leave.endTrajectory().fresh().build();
 
         // Action that ensures pose is set to end of traj1 (optional)
         Action driveToShootTraj = driveToShoot.build();
+        Action driveToShoot2ndTimeTraj = driveToShoot2ndTime.build();
         Action thirdRowAndShootTraj = thirdRowAndShoot.build();
         Action leaveTraj = leave.build();
 
@@ -81,14 +88,20 @@ public abstract class Auto2 extends FTC26502OpMode {
 
         // Run everything sequentially
         Actions.runBlocking(
-                new SequentialAction(
+                new SequentialAction(   
+                        driveToShootTraj,
+                        closeDriveToShoot,
                         shooter.shootTop(1500,43,1),
                         new SleepAction(wait),
                         intake.startIntakeAction(),
                         new SleepAction(5),
                         shooter.stopAction(),
-                        leaveTraj,
-                        closeLeave
+                        thirdRowAndShootTraj,
+                        closeThridRowAndShoot,
+                        intake.stopIntakeAction(),
+                        driveToShoot2ndTimeTraj,
+                        closeDriveToShoot2ndTime
+
 //                        thirdRowAndShootTraj,
 //                        closeThridRowAndShoot,
 //                        intake.stopIntakeAction()

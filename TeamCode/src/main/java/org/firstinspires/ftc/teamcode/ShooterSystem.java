@@ -113,6 +113,7 @@ public class ShooterSystem {
         shooterRight.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);

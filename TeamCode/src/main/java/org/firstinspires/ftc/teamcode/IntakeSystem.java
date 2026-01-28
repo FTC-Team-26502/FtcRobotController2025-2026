@@ -91,12 +91,21 @@ public class IntakeSystem {
 
         };
     }
+    public Action reverseFirstRow(){
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                fr.setPower(1);
+                return false;
+            }
+        };
+    }
 
     public Action ball1Collected(){
         return new SequentialAction(startSecondRow(), new SleepAction(1), stopSecondRow()) ;
     }
-    public Action feedShooter(){
-        return new SequentialAction(new SleepAction(1),startSecondRow(), new SleepAction(1), startIntakeAction());
+    public Action feedShooter(double waitTime){
+            return new SequentialAction(new SleepAction(waitTime),startSecondRow(), new SleepAction(waitTime), startIntakeAction(), new SleepAction(waitTime));
     }
     public Action secondRow() {
         return new Action() {
@@ -132,6 +141,7 @@ public class IntakeSystem {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 ml.setPower(0);
                 mr.setPower(0);
+                toggleSecond = false;
                 return false;
             }
         };

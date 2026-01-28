@@ -26,12 +26,16 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 @Config
 public abstract class Auto extends FTC26502OpMode {
+    public static int y2 = -20;
     public static int y = -10;
     public static int x = -10;
     public static int heading = 45;
     public static int angle = 50;
     public static int power = 1350;
-    public static int wait = 1;
+    public static double wait = 1.5;
+    public static int wait1 = 2;
+    public static int wait2 = 1;
+    public static int wait3 = 2;
     public static int y1 = 72;
     public static int x1 = 18;
     public static int x2 = 56;
@@ -63,12 +67,15 @@ public abstract class Auto extends FTC26502OpMode {
         // Action that ensures pose is set to end of traj1 (optional)
         Action closeDriveToShoot = driveToShoot.endTrajectory().fresh().build();
 
-        TrajectoryActionBuilder firstRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
+        TrajectoryActionBuilder driveToFirstRow = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
                 .splineTo(new Vector2d(-12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(-12,-70*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineToConstantHeading(new Vector2d(-12,-50*yMultiplier), Math.toRadians(-90*yMultiplier))
-                .splineTo(new Vector2d(-12,-12*yMultiplier),Math.toRadians(45*yMultiplier));
-        Action closeFirstRowAndShoot = firstRowAndShoot.endTrajectory().fresh().build();
+                .lineToY(-y1*yMultiplier);
+        Action closeFirstRowAndShoot = driveToFirstRow.endTrajectory().fresh().build();
+
+        TrajectoryActionBuilder shootAfterFirstRow = drive.actionBuilder(new Pose2d(-12,-70*yMultiplier, Math.toRadians(-90*yMultiplier)))
+                .lineToY(y2*yMultiplier)
+                .turnTo(Math.toRadians(heading*yMultiplier));
+        Action closeShootAfterFirstRow = shootAfterFirstRow.endTrajectory().fresh().build();
 
         TrajectoryActionBuilder secondRowAndShoot = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
                 .splineTo(new Vector2d(x1,-30*yMultiplier), Math.toRadians(-90*yMultiplier))
@@ -85,12 +92,14 @@ public abstract class Auto extends FTC26502OpMode {
         Action closeThridRowAndShoot = thirdRowAndShoot.endTrajectory().fresh().build();
 
         TrajectoryActionBuilder leave = drive.actionBuilder(new Pose2d(x,y*yMultiplier, Math.toRadians(heading*yMultiplier)))
-                .splineTo(new Vector2d(0,-42*yMultiplier),Math.toRadians(0*yMultiplier));
+                .splineTo(new Vector2d(0,-72*yMultiplier),Math.toRadians(0*yMultiplier));
         Action closeLeave = leave.endTrajectory().fresh().build();
 
         // Action that ensures pose is set to end of traj1 (optional)
         Action driveToShootTraj = driveToShoot.build();
-        Action firstRowAndShootTraj = firstRowAndShoot.build();
+        Action driveToFirstRowTraj = driveToFirstRow.build();
+        Action shootAfterFirstRowTraj = shootAfterFirstRow.build();
+
         Action secondRowAndShootTraj = secondRowAndShoot.build();
         Action thirdRowAndShootTraj = thirdRowAndShoot.build();
         Action leaveTraj = leave.build();
@@ -112,28 +121,31 @@ public abstract class Auto extends FTC26502OpMode {
                         return false;
                     }
                 }),
-                new StoppableAction( shooter.shootBottom(power, angle, 1)),
+                new StoppableAction(shooter.shootBottom(power, angle, 1)),
                 new StoppableAction(new SleepAction(wait)),
                 new StoppableAction(intake.startIntakeAction()),
-                new StoppableAction(new SleepAction(3)),//,
+                new StoppableAction(new SleepAction(wait1)),//,
                 new StoppableAction(shooter.stopAction()),
-                new StoppableAction(firstRowAndShootTraj),
+                new StoppableAction(driveToFirstRowTraj),
                 new StoppableAction(closeFirstRowAndShoot),
+                new StoppableAction(new SleepAction(wait2)),
+                new StoppableAction(intake.stopIntakeAction()),
+                new StoppableAction(shootAfterFirstRowTraj),
+                new StoppableAction(closeShootAfterFirstRow),
+                new StoppableAction(shooter.shootBottom(power, angle, 1)),
+                new StoppableAction(new SleepAction(wait)),
+                new StoppableAction(intake.startIntakeAction()),
+                new StoppableAction(new SleepAction(wait3)),//,
+//                new StoppableAction(shooter.stopAction()),
+//                new StoppableAction(secondRowAndShootTraj),
+//                new StoppableAction(closeSecondRowAndShoot),
+//                new StoppableAction(intake.stopIntakeAction()),
+//                new StoppableAction(shooter.shootBottom(power, angle, 1)),
+//                new StoppableAction(new SleepAction(wait)),
+//                new StoppableAction(intake.startIntakeAction()),
+//                new StoppableAction(new SleepAction(5)),
+//                new StoppableAction(shooter.stopAction()),
                 new StoppableAction(shooter.dropShooter()),
-                new StoppableAction(intake.stopIntakeAction()),
-                new StoppableAction(shooter.shootBottom(power, angle, 1)),
-                new StoppableAction(new SleepAction(wait)),
-                new StoppableAction(intake.startIntakeAction()),
-                new StoppableAction(new SleepAction(3)),//,
-                new StoppableAction(shooter.stopAction()),
-                new StoppableAction(secondRowAndShootTraj),
-                new StoppableAction(closeSecondRowAndShoot),
-                new StoppableAction(intake.stopIntakeAction()),
-                new StoppableAction(shooter.shootBottom(power, angle, 1)),
-                new StoppableAction(new SleepAction(wait)),
-                new StoppableAction(intake.startIntakeAction()),
-                new StoppableAction(new SleepAction(5)),
-                new StoppableAction(shooter.stopAction()),
                 new StoppableAction(leaveTraj),
                 new StoppableAction(closeLeave)
 //                        thirdRowAndShootTraj,
