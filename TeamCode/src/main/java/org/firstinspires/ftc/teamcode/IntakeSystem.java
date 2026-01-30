@@ -16,90 +16,149 @@ public class IntakeSystem {
 
     IntakeSystem(HardwareMap hw, Telemetry telemetry) {
         this.telemetry = telemetry;
-        //fl = hw.get(CRServo.class, "inFrontLeft");
+
         fr = hw.get(CRServo.class, "inFrontRight");
         ml = hw.get(CRServo.class, "inMiddleLeft");
         mr = hw.get(CRServo.class, "inMiddleRight");
         bl = hw.get(CRServo.class, "inBackLeft");
         br = hw.get(CRServo.class, "inBackRight");
 
-
-        //fl.setDirection(CRServo.Direction.REVERSE);
         ml.setDirection(CRServo.Direction.REVERSE);
         bl.setDirection(CRServo.Direction.REVERSE);
+
         telemetry.addLine("Intake initialized");
     }
 
-    public Action stopIntakeAction(){
+    /* =====================
+       Core Intake Methods
+       ===================== */
+
+    public void startIntake() {
+        startFirstRow();
+        startSecondRow();
+        startBackRow();
+    }
+
+    public void stopIntake() {
+        stopFirstRow();
+        stopSecondRow();
+        stopBackRow();
+    }
+
+    /* =====================
+       Row Control Methods
+       ===================== */
+
+    public void startFirstRow() {
+        fr.setPower(-1);
+    }
+
+    public void stopFirstRow() {
+        fr.setPower(0);
+    }
+
+    public void startSecondRow() {
+        ml.setPower(1);
+        mr.setPower(1);
+    }
+
+    public void stopSecondRow() {
+        ml.setPower(0);
+        mr.setPower(0);
+    }
+
+    public void startBackRow() {
+        bl.setPower(1);
+        br.setPower(1);
+    }
+
+    public void stopBackRow() {
+        bl.setPower(0);
+        br.setPower(0);
+    }
+
+    /* =====================
+       Action Wrappers
+       (Required Structure)
+       ===================== */
+
+    public Action startIntakeAction() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                //fl.setPower(0);
-                fr.setPower(0);
-                ml.setPower(0);
-                mr.setPower(0);
-                bl.setPower(0);
-                br.setPower(0);
+                startIntake();
                 return false;
             }
         };
     }
 
-    public Action startIntakeAction(){
+    public Action stopIntakeAction() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                //fl.setPower(1);
-                fr.setPower(-1);
-                ml.setPower(1);
-                mr.setPower(1);
-                bl.setPower(1);
-                br.setPower(1);
+                stopIntake();
                 return false;
             }
         };
     }
 
-    public Action stallDetected() {
-        return new Action() {
-        @Override
-            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                fr.setPower(1);
-                return false;
-            }
-        };
-
-    }
-    public Action firstRow(boolean a) {
+    public Action startFirstRowAction() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if (fr.getPower() == 0) {
-                    fr.setPower(-1);
-                } else {
-                    fr.setPower(0);
-                }
+                startFirstRow();
                 return false;
             }
-
         };
     }
 
-    public Action secondRow() {
+    public Action stopFirstRowAction() {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if (ml.getPower() + mr.getPower() == 0) {
-                    ml.setPower(1);
-                    mr.setPower(1);
-                } else {
-                    ml.setPower(0);
-                    mr.setPower(0);
-                }
+                stopFirstRow();
                 return false;
             }
         };
-
     }
 
+    public Action startSecondRowAction() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                startSecondRow();
+                return false;
+            }
+        };
+    }
+
+    public Action stopSecondRowAction() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                stopSecondRow();
+                return false;
+            }
+        };
+    }
+
+    public Action startBackRowAction() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                startBackRow();
+                return false;
+            }
+        };
+    }
+
+    public Action stopBackRowAction() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                stopBackRow();
+                return false;
+            }
+        };
+    }
 }

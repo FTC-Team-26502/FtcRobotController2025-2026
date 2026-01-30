@@ -1,62 +1,42 @@
-package org.firstinspires.ftc.teamcode.test;
-
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-
-@TeleOp
-public class IntakeTestTele extends LinearOpMode {
-    private CRServo intakeServo;
-    private CRServo intakeServo1;
-    private CRServo intakeServo2;
-    private CRServo intakeServo3;
-    private CRServo intakeServo4;
-    private DcMotorEx leftFront;
-    private DcMotorEx leftBack;
-    private DcMotorEx rightFront;
-    private DcMotorEx rightBack;
-    private double power;
-    @Override
-    public void runOpMode() throws InterruptedException {
-            leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-            leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-            rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-            rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
-            intakeServo = hardwareMap.get(CRServo.class, "inFrontRight");
-            intakeServo1 = hardwareMap.get(CRServo.class, "inMiddleRight");
-            intakeServo2 = hardwareMap.get(CRServo.class, "inMiddleLeft");
-            intakeServo3 = hardwareMap.get(CRServo.class, "inBackRight");
-            intakeServo4 = hardwareMap.get(CRServo.class, "inBackLeft");
-            waitForStart();
-            while(opModeIsActive()) {
-                 power = gamepad1.left_stick_y;
-                 leftFront.setPower(-power);
-                 leftBack.setPower(-power);
-                 rightBack.setPower(power);
-                 rightFront.setPower(power);
-
-                 if (gamepad1.a) {
-                     intakeServo.setPower(-1);
-                     intakeServo1.setPower(1);
-                     intakeServo2.setPower(-1);
-                     intakeServo3.setPower(1);
-                     intakeServo4.setPower(-1);
-                 } else if (gamepad1.b) {
-                     intakeServo.setPower(0);
-                     intakeServo1.setPower(0);
-                     intakeServo2.setPower(0);
-                     intakeServo3.setPower(0);
-                     intakeServo4.setPower(0);
-                 } else if (gamepad1.x) {
-                     intakeServo.setPower(1);
-                     intakeServo1.setPower(1);
-                     intakeServo2.setPower(-1);
-                     intakeServo3.setPower(-1);
-                     intakeServo4.setPower(-1);
-                 }
-             }
-
-
-    }
-}
+//package org.firstinspires.ftc.teamcode.test;
+//
+//import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+//
+//import org.firstinspires.ftc.teamcode.FTC26502OpMode;
+//
+//@TeleOp
+//public class IntakeTestTele extends FTC26502OpMode {
+//    @Override
+//    public void runOpMode() throws InterruptedException {
+//        waitForStart();
+//        super.initOpMode(false, false, false, true, false, false, true);
+//        ;
+//
+//        while(opModeIsActive()) {
+//            if (gamepad1.a) {
+//                intake.startIntake();
+//            }
+//            if (gamepad1.b) {
+//                intake.firstRowStart();
+//            }
+//            if (gamepad1.x) {
+//                intake.secondRowStart();
+//            }
+//            if (gamepad1.y) {
+//                intake.thirdRowStart();
+//            }
+//            if (gamepad2.a) {
+//                intake.stopIntake();
+//            }
+//            if (gamepad2.b) {
+//                intake.firstRowStop();
+//            }
+//            if (gamepad2.x) {
+//                intake.secondRowStop();
+//            }
+//            if (gamepad2.y) {
+//                intake.thirdRowStop();
+//            }
+//        }
+//    }
+//}

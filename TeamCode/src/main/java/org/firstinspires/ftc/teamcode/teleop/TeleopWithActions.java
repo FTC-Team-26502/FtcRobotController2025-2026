@@ -91,26 +91,19 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             // check intake DO NOT chain the controls with else if (makes buttons unreliable and not consistently pressed)
 
             if (pressedOnce(b, bPrev)) {
-                runningActions.add(intake.secondRow());   // start
+                runningActions.add(intake.startSecondRowAction());   // start
             }
             if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
-                runningActions.add(intake.firstRow());
+                runningActions.add(intake.startFirstRowAction());
             }
 
-            if (lb) {
-                runningActions.add(intake.stallDetected());
-            }
-
-            if (gamepad1.left_trigger > 0.75 & gamepad1.right_trigger > 0.75) {
-                shooter.manualOverride = true;
-            }
-            boolean canShoot = shooter.checkShootPoosible();
+            boolean canShoot = shooter.checkShootPossible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
             if (pressedOnce(x, xPrev)) {
                 telemetry.addLine("x pressed");
                 telemetry.addLine("Can shoot");
-                runningActions.add(shooter.oneShotAction(this));
+                runningActions.add(shooter.shootAction());
 
             }
 
