@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -25,7 +26,7 @@ public class ShooterSystem {
     private static final double DEFAULT_FLYWHEEL_SPEED = 3000; // ticks per second
     private static final double SHOOTER_DEFAULT_ANGLE = Math.PI/4;
     private final Telemetry telemetry;
-    public DcMotorEx anglerLeft, anglerRight;
+    public Servo anglerLeft, anglerRight;
     public DcMotorEx shooterLeft;
     public DcMotorEx shooterRight;
     private DistanceSensor blDist, brDist;
@@ -36,6 +37,7 @@ public class ShooterSystem {
     public boolean manualOverride = false;
 
     private final double ANGLER_SPEED = 0.05;
+    private final double STARTING_ANGLE = 45.0;
     private final double ANGLE_TO_TICKS = (1/360.0) * 1425;
     private final double GRAVITY = 9.80665;
     public static final double DELTA_Y = 0.9;
@@ -101,8 +103,8 @@ public class ShooterSystem {
         IMU.Parameters params = new IMU.Parameters(
                 new RevHubOrientationOnRobot(logoDir, usbDir));
         shooterIMU.initialize(params);
-        anglerLeft = hw.get(DcMotorEx.class, "anglerLeft");
-        anglerRight = hw.get(DcMotorEx.class, "anglerRight");
+        anglerLeft = hw.get(Servo.class, "anglerLeft");
+        anglerRight = hw.get(Servo.class, "anglerRight");
         shooterLeft = hw.get(DcMotorEx.class, "shooterLeft");
         shooterRight = hw.get(DcMotorEx.class, "shooterRight");
 
@@ -115,20 +117,16 @@ public class ShooterSystem {
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooterRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        anglerLeft.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        anglerRight.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        anglerLeft.setTargetPosition(0);
-        anglerRight.setTargetPosition(0);
-        anglerLeft.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-        anglerRight.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        anglerLeft.setPosition(0);
+        anglerRight.setPosition(0);
 
         PIDFCoefficients pidfLeft = new PIDFCoefficients(P, I, D, FRight);
         PIDFCoefficients pidfRight = new PIDFCoefficients(P, I, D, FLeft);
         shooterLeft.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfLeft);
         shooterRight.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfRight);
 
-        anglerRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        anglerLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        anglerRight.setDirection(Servo.Direction.REVERSE);
+        anglerLeft.setDirection(Servo.Direction.FORWARD);
 
         bl = hw.get(CRServo.class, "inBackLeft");
         br = hw.get(CRServo.class, "inBackRight");
@@ -204,8 +202,8 @@ public class ShooterSystem {
         return new Action() {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                anglerLeft.setTargetPosition(0);
-                anglerRight.setTargetPosition(0);
+                anglerLeft.setPosition(0);
+                anglerRight.setPosition(0);
                 return false;
             }
         };
@@ -253,12 +251,10 @@ public class ShooterSystem {
         if (manualOverride) {
             shootingAngle = SHOOTER_DEFAULT_ANGLE;
         }
-        int ticks = (int) Math.round(ANGLE_TO_TICKS * Math.toDegrees(shootingAngle));
+        int ticks = (int) Math.round(ANGLE_TO_TICKS * (Math.toDegrees(shootingAngle) - STARTING_ANGLE));
         telemetry.addData("ticks", ticks);
-        anglerLeft.setPower(ANGLER_SPEED);
-        anglerRight.setPower(ANGLER_SPEED);
-        anglerLeft.setTargetPosition(ticks);
-        anglerRight.setTargetPosition(ticks);
+        anglerLeft.setPosition(ticks);
+        anglerRight.setPosition(ticks);
         if (usingIMU) {
             if (
                     Math.abs(
@@ -273,17 +269,13 @@ public class ShooterSystem {
             }
             return Step.Status.RUNNING;
         } else {
-
             telemetry.addLine("setup angler done");
             telemetry.update();
-            if (Math.abs(anglerLeft.getTargetPosition() - anglerLeft.getCurrentPosition() ) < 3 ) {
-                return Step.Status.SUCCESS;
-            } else {
-                return Step.Status.RUNNING;
-            }
+            return Step.Status.SUCCESS;
 
         }
     }
+
 
     public Action shootTop(int velocity, double shootingAngle, double waitTime){
         return new SequentialAction(shootingTopTriangle(velocity,shootingAngle), new SleepAction(waitTime), shootAction());
@@ -337,10 +329,8 @@ public class ShooterSystem {
                 shooterLeft.setPower(1);
                 shooterRight.setPower(1);
                 shootingPID(velocity);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
-                anglerRight.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+                anglerLeft.setPosition((int) ((shootingAngle-STARTING_ANGLE) * ANGLE_TO_TICKS));
+                anglerRight.setPosition((int) ((shootingAngle-STARTING_ANGLE) * ANGLE_TO_TICKS));
                 return false;
             }
         };
@@ -394,10 +384,8 @@ public class ShooterSystem {
         shooterLeft.setPower(1);
         shooterRight.setPower(1);
         shootingPID(velocity);
-        anglerLeft.setPower(0.2);
-        anglerRight.setPower(0.2);
-        anglerLeft.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
-        anglerRight.setTargetPosition((int) (shootingAngle * ANGLE_TO_TICKS));
+        anglerLeft.setPosition((int) ((shootingAngle-STARTING_ANGLE) * ANGLE_TO_TICKS));
+        anglerRight.setPosition((int) ((shootingAngle-STARTING_ANGLE) * ANGLE_TO_TICKS));
         telemetry.addLine("motors powered");
         telemetry.update();
     }
@@ -412,10 +400,8 @@ public class ShooterSystem {
                 bl.setPower(1);
                 shooterLeft.setVelocity(power);
                 shooterRight.setVelocity(power);
-                anglerLeft.setPower(0.2);
-                anglerRight.setPower(0.2);
-                anglerLeft.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
-                anglerRight.setTargetPosition((int) (angle * ANGLE_TO_TICKS));
+                anglerLeft.setPosition((int) ((angle-STARTING_ANGLE) * ANGLE_TO_TICKS));
+                anglerRight.setPosition((int) ((angle-STARTING_ANGLE) * ANGLE_TO_TICKS));
                 telemetry.addLine("motors powered");
                 telemetry.update();
                 return false;
@@ -508,23 +494,14 @@ public class ShooterSystem {
     public void stop() {
         shooterLeft.setPower(0);
         shooterRight.setPower(0);
-        anglerLeft.setPower(0);
-        anglerRight.setPower(0);
         br.setPower(0);
         bl.setPower(0);
         telemetry.addLine("Shotting stoped 1");
     }
 
     public void shutdown() {
-        anglerLeft.setPower(0.2);
-        anglerRight.setPower(0.2);
-
-        anglerRight.setTargetPosition(0);
-        anglerLeft.setTargetPosition(0);
-
-        anglerLeft.setPower(0);
-        anglerRight.setPower(0);
-
+        anglerRight.setPosition(0);
+        anglerLeft.setPosition(0);
     }
 
     public Action stopAction(){
