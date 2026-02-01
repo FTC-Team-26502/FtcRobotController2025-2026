@@ -131,6 +131,16 @@ public class IntakeSystem {
             }
         };
     }
+    public Action startBackRowsAction() {
+        return new Action() {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                startSecondRow();
+                startBackRow();
+                return false;
+            }
+        };
+    }
 
     public Action stopSecondRowAction() {
         return new Action() {

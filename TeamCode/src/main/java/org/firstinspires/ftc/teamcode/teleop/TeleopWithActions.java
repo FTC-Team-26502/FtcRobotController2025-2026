@@ -43,11 +43,11 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
         waitForStart();
         while (opModeIsActive()) {
 
-            boolean a = gamepad1.a;
-            boolean b = gamepad1.b;
-            boolean x = gamepad1.x;
-            boolean y = gamepad1.y;
-            boolean lb = gamepad1.left_bumper;
+            boolean a = gamepad1.x;
+            boolean b = gamepad1.y;
+            boolean x = gamepad1.left_bumper;
+            boolean y = gamepad1.right_bumper;
+            boolean lb = gamepad1.dpad_left;
 
             TelemetryPacket packet = new TelemetryPacket();
             // 1) Manual driving while actions can run concurrently
@@ -55,7 +55,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
             double fwd = -gamepad1.left_stick_y;
             double str = -gamepad1.left_stick_x;
             double turn = -gamepad1.right_stick_x;
-            if (manualDriving) {
+            if (drive != null) {
                 //        // Optional slow modes with triggers
                 //        double transScale = 1.0 - 0.6 * gamepad1.right_trigger;
                 //        double rotScale   = 1.0 - 0.6 * gamepad1.left_trigger;
@@ -83,6 +83,7 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                         // any path violations will not stop the loop
                         driveAction = null;
                         drive.setDrivePowers(str, fwd, turn);
+
                     }
                 }
             }
@@ -94,10 +95,10 @@ public abstract class TeleopWithActions  extends FTC26502OpMode {
                 runningActions.add(intake.startSecondRowAction());   // start
             }
             if (pressedOnce(a, aPrev)) /* Rubber band intake */ {
-                runningActions.add(intake.startFirstRowAction());
+                runningActions.add(intake.startBackRowsAction());
             }
 
-            boolean canShoot = shooter.checkShootPossible();
+            boolean canShoot = shooter.checkShootPoosible();
             sensors.setCanShoot(canShoot);
             sensors.updateIndicatorLights(now());
             if (pressedOnce(x, xPrev)) {
