@@ -75,10 +75,10 @@ public class ShooterTuningOpMode extends FTC26502OpMode {
             telemetry.addData("power", shooter.shooterLeft.getPower());
             shooter.shooterLeft.setVelocity(shooterPowerLeft);
             shooter.shooterRight.setVelocity(shooterPowerRight);
-            shooter.anglerLeft.setPower(0.2);
-            shooter.anglerRight.setPower(0.2);
-            shooter.anglerLeft.setTargetPosition((int)(angleDeg*tickPerRev));
-            shooter.anglerRight.setTargetPosition((int)(angleDeg*tickPerRev));
+//            shooter.anglerLeft.setPower(0.2);
+//            shooter.anglerRight.setPower(0.2);
+//            shooter.anglerLeft.setTargetPosition((int)(angleDeg*tickPerRev));
+//            shooter.anglerRight.setTargetPosition((int)(angleDeg*tickPerRev));
             telemetry.update();
 
 

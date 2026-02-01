@@ -55,8 +55,6 @@ public abstract class Auto extends FTC26502OpMode {
             new SequentialAction(
                 driveToShootTraj,
                 closeDriveToShoot,
-                shooter.setupFlywheelAction(),
-                shooter.setupAnglerAction(),
                 shooter.shootAction(),
                 new SleepAction(1),
                 intake.startIntakeAction(),
